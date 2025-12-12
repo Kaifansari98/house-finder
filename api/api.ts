@@ -33,3 +33,35 @@ export const login = (payload: LoginRequest) =>
     method: 'POST',
     body: payload,
   });
+
+// Sidebar menu
+export type SidebarRequest = {
+  user_id: number;
+  role_id: number;
+};
+
+export type SidebarMenuItem = {
+  id: number;
+  page_name: string;
+  parent_id: number;
+  created_by: number | null;
+  href: string | null;
+  main_menu_id: string | null;
+  svg: string | null;
+  sub_menu_id: number | null;
+};
+
+export type SidebarResponse = {
+  message: string;
+  status: number;
+  data: {
+    parent_menu: SidebarMenuItem[];
+    child_menu: SidebarMenuItem[];
+  };
+};
+
+export const loadSidebar = (payload: SidebarRequest) =>
+  apiClient<SidebarResponse>('app-load-menu', {
+    method: 'POST',
+    body: payload,
+  });
