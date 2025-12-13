@@ -1,0 +1,80 @@
+{
+    "message": "",
+    "status": 1,
+    "data": {
+        "total_leads": 35574,
+        "lead_assignment_log": [],
+        "missed_followup": 0,
+        "today_followup": 0,
+        "future_followup": 999,
+        "lead_counts": [
+            {
+                "total_lead": 18,
+                "title": "Total Leads"
+            },
+            {
+                "total_lead": 3,
+                "title": "Unattended Leads"
+            }
+        ],
+        "activity_report": [
+            {
+                "total_history": 255,
+                "distinct_history": 255,
+                "fullname": "Muhammad Omar Shahid"
+            },
+            {
+                "total_history": 318,
+                "distinct_history": 318,
+                "fullname": "Muhammad Raza Khalid"
+            }
+        ],
+        "campaign_details": [
+            {
+                "total_lead": 19,
+                "campaign_name": "UZ Dugasta"
+            },
+            {
+                "total_lead": 3,
+                "campaign_name": "Vestoria by Ahmadyar"
+            }
+        ],
+        "lead_status": [
+            {
+                "agent_name": "Sonam Jain",
+                "Status_10": 659,
+                "Status_11": 363,
+                "Status_12": 56,
+                "Status_13": 14
+            },
+            {
+                "agent_name": "Sonia Kapoor",
+                "Status_10": 264,
+                "Status_11": 39,
+                "Status_12": 3,
+                "Status_13": 2
+            }
+        ],
+        "role_master_id": 1,
+        "view_all_lead_enquiry": [
+            {
+                "id": 21,
+                "lead_id": 0,
+                "rent_sell": "3",
+                "location": "Dubai land",
+                "budget": "1.25-1.3 MIl",
+                "payment_type": "2",
+                "description": "Client requires 2-Bedroom in Dubai land ( not Warsan 4) with maximum of 1000+ sqft. End-user , working in DSO area. JVC is also acceptable to the client.",
+                "created_by": 337,
+                "created_at": "2025-06-30 12:06:36",
+                "updated_by": null,
+                "updated_at": null,
+                "active": "Yes",
+                "deleted_at": null,
+                "deleted_by": null,
+                "fullname": null,
+                "created_by_name": "Sheela N"
+            }
+        ]
+    }
+}

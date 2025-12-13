@@ -7,12 +7,19 @@ import { router } from "expo-router";
 import Navbar from "@/components/Navbar";
 import Sidebar from "@/components/Sidebar";
 import { useSidebarData } from "@/hooks/sidebar/useSidebarData";
+import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
+import StatsCards from "@/components/StatsCards";
 
 export default function Dashboard() {
   const authData = useAuthStore(selectAuthData);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const { data: sidebarData } = useSidebarData(
+    authData
+      ? { user_id: Number(authData.user.user_id), role_id: Number(authData.user.role_id) }
+      : null
+  );
+  const { data: dashboardData } = useDashboardData(
     authData
       ? { user_id: Number(authData.user.user_id), role_id: Number(authData.user.role_id) }
       : null
@@ -28,6 +35,14 @@ export default function Dashboard() {
   }
 
   if (!sidebarData) {
+    return (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
+
+  if (!dashboardData) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Loading dashboard...</Text>
@@ -73,6 +88,13 @@ export default function Dashboard() {
           <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
           <Text style={styles.pageSubtitle}>Welcome back, {user.fullname.split(" ")[0]}.</Text>
         </View>
+
+        <StatsCards
+          totalLeads={dashboardData.data.total_leads}
+          missedFollowup={dashboardData.data.missed_followup}
+          todayFollowup={dashboardData.data.today_followup}
+          futureFollowup={dashboardData.data.future_followup}
+        />
 
         {/* User Profile Card */}
         {/* <View style={styles.card}>
@@ -127,21 +149,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   scrollContent: {
-    paddingHorizontal: 24,
-    paddingVertical: 20,
+    padding: 20,
     paddingBottom: 40,
   },
   pageHeader: {
-    marginBottom: 10,
+    marginBottom: 8,
   },
   pageTitle: {
-    fontSize: 27,
+    fontSize: 24,
     fontWeight: "800",
     color: "#000000",
     letterSpacing: -0.8,
   },
   pageSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: "#6b7280",
     fontWeight: "500",
   },
@@ -149,11 +170,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     borderRadius: 16,
     marginBottom: 24,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    elevation: 3,
     borderWidth: 1,
     borderColor: "#e5e7eb",
     overflow: "hidden",
