@@ -1,5 +1,12 @@
-import { useQuery, type UseQueryOptions, type UseQueryResult } from "@tanstack/react-query";
-import { loadDashboard, type DashboardRequest, type DashboardResponse } from "@/api/api";
+import { useQuery, type UseQueryOptions, type UseQueryResult, useMutation, type UseMutationOptions, type UseMutationResult  } from "@tanstack/react-query";
+import {
+  loadDashboard,
+  type DashboardRequest,
+  type DashboardResponse,
+  acceptLead,
+  type AcceptLeadRequest,
+  type AcceptLeadResponse,
+} from "@/api/api";
 
 export const useDashboardData = (
   payload: DashboardRequest | null,
@@ -15,6 +22,16 @@ export const useDashboardData = (
       return loadDashboard(payload);
     },
     enabled: Boolean(payload?.user_id && payload?.role_id),
+    ...options,
+  });
+};
+
+export const useAcceptLead = (
+  options?: UseMutationOptions<AcceptLeadResponse, Error, AcceptLeadRequest>
+): UseMutationResult<AcceptLeadResponse, Error, AcceptLeadRequest> => {
+  return useMutation<AcceptLeadResponse, Error, AcceptLeadRequest>({
+    mutationKey: ["accept-lead"],
+    mutationFn: acceptLead,
     ...options,
   });
 };

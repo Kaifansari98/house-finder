@@ -16,10 +16,10 @@ export default function StatsCards({
   futureFollowup,
 }: StatsCardsProps) {
   const cards = [
-    { title: "Total Lead's", value: totalLeads, trendColor: "#10b981" }, // green
-    { title: "Missed Follow up's", value: missedFollowup, trendColor: "#ef4444" }, // red
-    { title: "Today Follow up's", value: todayFollowup, trendColor: "#eab308" }, // yellow
-    { title: "Future Follow up's", value: futureFollowup, trendColor: "#3b82f6" }, // blue
+    { title: "Total Leads", value: totalLeads, trendColor: "#10b981" }, // green
+    { title: "Missed Follow Ups", value: missedFollowup, trendColor: "#ef4444" }, // red
+    { title: "Today Follow Ups", value: todayFollowup, trendColor: "#eab308" }, // yellow
+    { title: "Follow Ups", value: futureFollowup, trendColor: "#3b82f6" }, // blue
   ].filter((card) => card.value !== undefined && card.value !== null);
 
   if (cards.length === 0) return null;
@@ -45,8 +45,12 @@ export default function StatsCards({
 
               {/* Left Side: Value + Trend */}
               <View style={styles.leftContent}>
-                <Text style={styles.value}>{item.value}</Text>
-                {item.value && item.value > 0 && (
+                <Text style={styles.value}>
+                  {typeof item.value === "number"
+                    ? item.value
+                    : Number(item.value) || 0}
+                </Text>
+                {Number(item.value) > 0 && (
                   <TrendingUp
                     size={14}
                     color={item.trendColor}

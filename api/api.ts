@@ -25,6 +25,7 @@ export type LoginResponse = {
       role_name: string;
       role_master_id: number;
     };
+    encrypted_user_id: string;
   };
 };
 
@@ -96,6 +97,16 @@ export type DashboardLeadStatus = {
   Status_13?: number;
 };
 
+export type DashboardLeadAssignmentLog = {
+  lead_id: string;
+  id: number;
+  fullname: string;
+  email: string | null;
+  created_at: string;
+  end_time: string;
+  time_diff: number;
+};
+
 export type DashboardLeadEnquiry = {
   id: number;
   lead_id: number;
@@ -120,7 +131,7 @@ export type DashboardResponse = {
   status: number;
   data: {
     total_leads: number;
-    lead_assignment_log: unknown[];
+    lead_assignment_log: DashboardLeadAssignmentLog[];
     missed_followup: number;
     today_followup: number;
     future_followup: number;
@@ -135,6 +146,26 @@ export type DashboardResponse = {
 
 export const loadDashboard = (payload: DashboardRequest) =>
   apiClient<DashboardResponse>('app-dashboard', {
+    method: 'POST',
+    body: payload,
+  });
+
+// Accept Lead
+export type AcceptLeadRequest = {
+  lead_id: string | number;
+  user_id: string;
+};
+
+export type AcceptLeadResponse = {
+  message: string;
+  status: number;
+  data: {
+    log_id: number;
+  };
+};
+
+export const acceptLead = (payload: AcceptLeadRequest) =>
+  apiClient<AcceptLeadResponse>('accept-lead', {
     method: 'POST',
     body: payload,
   });

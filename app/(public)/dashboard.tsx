@@ -9,19 +9,27 @@ import Sidebar from "@/components/Sidebar";
 import { useSidebarData } from "@/hooks/sidebar/useSidebarData";
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import StatsCards from "@/components/StatsCards";
+import Activity from "@/components/Activity";
 
 export default function Dashboard() {
   const authData = useAuthStore(selectAuthData);
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const [sidebarVisible, setSidebarVisible] = useState(false);
 
   const { data: sidebarData } = useSidebarData(
     authData
-      ? { user_id: Number(authData.user.user_id), role_id: Number(authData.user.role_id) }
+      ? {
+          user_id: Number(authData.user.user_id),
+          role_id: Number(authData.user.role_id),
+        }
       : null
   );
   const { data: dashboardData } = useDashboardData(
     authData
-      ? { user_id: Number(authData.user.user_id), role_id: Number(authData.user.role_id) }
+      ? {
+          user_id: Number(authData.user.user_id),
+          role_id: Number(authData.user.role_id),
+        }
       : null
   );
 
@@ -59,6 +67,11 @@ export default function Dashboard() {
     // Add your navigation logic here
   };
 
+  const handleLogout = () => {
+    clearAuth();
+    router.replace("/(auth)/login");
+  };
+
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
       {/* Navbar */}
@@ -67,7 +80,7 @@ export default function Dashboard() {
         user={user}
         role={role}
       />
-      
+
       {/* Sidebar */}
       <Sidebar
         visible={sidebarVisible}
@@ -75,8 +88,8 @@ export default function Dashboard() {
         parentMenu={parentMenu}
         childMenu={childMenu}
         onMenuPress={handleMenuPress}
+        onLogout={handleLogout}
       />
-
 
       {/* Main Content */}
       <ScrollView
@@ -86,15 +99,23 @@ export default function Dashboard() {
         {/* Page Title */}
         <View style={styles.pageHeader}>
           <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
-          <Text style={styles.pageSubtitle}>Welcome back, {user.fullname.split(" ")[0]}.</Text>
+          <Text style={styles.pageSubtitle}>
+            Welcome back, {user.fullname.split(" ")[0]}.
+          </Text>
         </View>
 
-        <StatsCards
-          totalLeads={dashboardData.data.total_leads}
-          missedFollowup={dashboardData.data.missed_followup}
-          todayFollowup={dashboardData.data.today_followup}
-          futureFollowup={dashboardData.data.future_followup}
-        />
+        <View style={styles.statsCardsContainer}>
+          <StatsCards
+            totalLeads={dashboardData.data.total_leads}
+            missedFollowup={dashboardData.data.missed_followup}
+            todayFollowup={dashboardData.data.today_followup}
+            futureFollowup={dashboardData.data.future_followup}
+          />
+        </View>
+
+        <View style={styles.ActivityContainer}>
+        <Activity logs={dashboardData.data.lead_assignment_log} />
+        </View>
 
         {/* User Profile Card */}
         {/* <View style={styles.card}>
@@ -149,11 +170,20 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
   },
   scrollContent: {
-    padding: 20,
+    paddingVertical: 15,
     paddingBottom: 40,
   },
   pageHeader: {
-    marginBottom: 8,
+    marginBottom: 4,
+    paddingHorizontal: 20,
+  },
+  statsCardsContainer: {
+    marginBottom: 4,
+    paddingHorizontal: 20,
+  },
+  ActivityContainer: {
+    marginBottom: 4,
+    // marginLeft: 20,
   },
   pageTitle: {
     fontSize: 24,

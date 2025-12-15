@@ -8,6 +8,7 @@ import {
   ScrollView,
   Dimensions,
   Image,
+  Pressable,
 } from "react-native";
 import { ChevronDown, ChevronRight } from "lucide-react-native";
 import { SidebarMenuItem } from "@/api/api";
@@ -21,6 +22,7 @@ interface SidebarProps {
   parentMenu: SidebarMenuItem[];
   childMenu: SidebarMenuItem[];
   onMenuPress?: (item: SidebarMenuItem) => void;
+  onLogout?: () => void;
 }
 
 export default function Sidebar({
@@ -29,6 +31,7 @@ export default function Sidebar({
   parentMenu,
   childMenu,
   onMenuPress,
+  onLogout,
 }: SidebarProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
 
@@ -73,13 +76,10 @@ export default function Sidebar({
     <>
       {/* Backdrop Overlay */}
       {visible && (
-        <TouchableOpacity
-          style={StyleSheet.absoluteFillObject}
-          activeOpacity={1}
+        <Pressable
+          style={[StyleSheet.absoluteFillObject, styles.overlay]}
           onPress={onClose}
-        >
-          <View style={styles.overlay} />
-        </TouchableOpacity>
+        />
       )}
 
       {/* Sidebar Panel */}
@@ -95,13 +95,13 @@ export default function Sidebar({
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.scrollContent}
         >
-            <View style={styles.Logo}>
+          <View style={styles.Logo}>
             <Image
-          source={require("../assets/imgs/Logo/logo2.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-            </View>
+              source={require("../assets/imgs/Logo/logo2.png")}
+              style={styles.logo}
+              resizeMode="contain"
+            />
+          </View>
           <View style={styles.menuContainer}>
             {parentMenu.map((parent) => {
               const children = childrenByParent[parent.id] || [];
@@ -166,6 +166,21 @@ export default function Sidebar({
               );
             })}
           </View>
+
+          {onLogout && (
+            <View style={styles.logoutWrapper}>
+              <TouchableOpacity
+                activeOpacity={0.8}
+                style={styles.logoutButton}
+                onPress={() => {
+                  onLogout();
+                  onClose();
+                }}
+              >
+                <Text style={styles.logoutText}>Logout</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
       </View>
     </>
@@ -174,9 +189,9 @@ export default function Sidebar({
 
 const styles = StyleSheet.create({
   overlay: {
-    ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     zIndex: 10,
+    elevation: 8,
   },
   sidebar: {
     position: "absolute",
@@ -263,4 +278,23 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   logo: { width: 150, height: 100 },
+  logoutWrapper: {
+    marginTop: 24,
+    paddingHorizontal: 20,
+    paddingBottom: 30,
+  },
+  logoutButton: {
+    backgroundColor: "#111827",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#1f2937",
+  },
+  logoutText: {
+    color: "#f9fafb",
+    fontWeight: "700",
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
 });
