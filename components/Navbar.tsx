@@ -1,7 +1,8 @@
 // components/Navbar.tsx
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { Menu, Bell, User, UserRound, BellDot } from "lucide-react-native";
+import { Menu, Bell } from "lucide-react-native";
+import { useRouter } from "expo-router";
 
 interface NavbarProps {
   onMenuPress: () => void;
@@ -15,6 +16,7 @@ interface NavbarProps {
 
 export default function Navbar({ onMenuPress, user, role }: NavbarProps) {
   const userInitial = user.fullname.charAt(0).toUpperCase();
+  const router = useRouter();
 
   return (
     <View style={styles.navbar}>
@@ -39,7 +41,10 @@ export default function Navbar({ onMenuPress, user, role }: NavbarProps) {
       </View>
 
       {/* Right: Bell Icon */}
-      <TouchableOpacity style={styles.bellButton}>
+      <TouchableOpacity
+        style={styles.bellButton}
+        onPress={() => router.push("/(public)/create-lead")}
+      >
         <Bell size={24} color="#0B1A2B" strokeWidth={2.2} />
       </TouchableOpacity>
     </View>

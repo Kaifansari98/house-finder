@@ -8,7 +8,6 @@ import {
   Modal,
   Pressable,
 } from "react-native";
-import { Mail } from "lucide-react-native";
 import type { DashboardLeadAssignmentLog } from "@/api/api";
 import { useAcceptLead } from "@/hooks/dashboard/useDashboardData";
 import { useAuthStore, selectAuthData } from "@/stores/auth-store";
@@ -40,12 +39,17 @@ const formatDateTime = (datetime: string) => {
     "SEP",
     "OCT",
     "NOV",
-    "DEC"
+    "DEC",
   ];
   let monthNum = Number(month);
-  let monthStr = monthNum && monthNum >= 1 && monthNum <= 12 ? MONTHS[monthNum] : month ?? "--";
+  let monthStr =
+    monthNum && monthNum >= 1 && monthNum <= 12
+      ? MONTHS[monthNum]
+      : month ?? "--";
 
-  return `${hour ?? "--"}:${minute ?? "--"}, ${day ?? "--"}-${monthStr}-${shortYear}`;
+  return `${hour ?? "--"}:${minute ?? "--"}, ${
+    day ?? "--"
+  }-${monthStr}-${shortYear}`;
 };
 
 const formatCountdown = (seconds: number) => {
@@ -60,8 +64,6 @@ const formatCountdown = (seconds: number) => {
 };
 
 export default function Activity({ logs }: ActivityProps) {
-  if (!logs || logs.length === 0) return null;
-
   const authData = useAuthStore(selectAuthData);
   const queryClient = useQueryClient();
   const { mutate: acceptLeadMutation, isPending } = useAcceptLead({
@@ -70,7 +72,11 @@ export default function Activity({ logs }: ActivityProps) {
       setSelectedLog(null);
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
       queryClient.refetchQueries({ queryKey: ["dashboard"], type: "active" });
-      setToast({ visible: true, type: "success", text: "Lead assigned to you." });
+      setToast({
+        visible: true,
+        type: "success",
+        text: "Lead assigned to you.",
+      });
       toastTimerRef.current && clearTimeout(toastTimerRef.current);
       toastTimerRef.current = setTimeout(() => {
         setToast((prev) => ({ ...prev, visible: false }));
@@ -80,7 +86,11 @@ export default function Activity({ logs }: ActivityProps) {
       console.error("Accept lead failed", err);
       setConfirmVisible(false);
       setSelectedLog(null);
-      setToast({ visible: true, type: "error", text: "Failed to accept lead." });
+      setToast({
+        visible: true,
+        type: "error",
+        text: "Failed to accept lead.",
+      });
       toastTimerRef.current && clearTimeout(toastTimerRef.current);
       toastTimerRef.current = setTimeout(() => {
         setToast((prev) => ({ ...prev, visible: false }));
@@ -90,17 +100,24 @@ export default function Activity({ logs }: ActivityProps) {
 
   const [timers, setTimers] = useState<Record<number, number>>({});
   const [confirmVisible, setConfirmVisible] = useState(false);
-  const [selectedLog, setSelectedLog] = useState<DashboardLeadAssignmentLog | null>(null);
-  const [toast, setToast] = useState<{ visible: boolean; type: "success" | "error" | "warning" | "info"; text: string }>({
+  const [selectedLog, setSelectedLog] =
+    useState<DashboardLeadAssignmentLog | null>(null);
+  const [toast, setToast] = useState<{
+    visible: boolean;
+    type: "success" | "error" | "warning" | "info";
+    text: string;
+  }>({
     visible: false,
     type: "info",
     text: "",
   });
-  const toastTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+  const toastTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
 
   const initialTimers = useMemo(() => {
     const next: Record<number, number> = {};
-    logs.forEach((log) => {
+    logs?.forEach((log) => {
       next[log.id] = Math.max(0, Math.round((log.time_diff || 0) * 60));
     });
     return next;
@@ -137,6 +154,8 @@ export default function Activity({ logs }: ActivityProps) {
     };
   }, []);
 
+  if (!logs || logs.length === 0) return null;
+
   return (
     <View style={styles.card}>
       <View style={styles.header}>
@@ -147,7 +166,9 @@ export default function Activity({ logs }: ActivityProps) {
             </View>
             <Text style={styles.title}>Leads Assignment Activity</Text>
           </View>
-          <Text style={styles.subtitle}>Leads are only available for two hours — act fast.</Text>
+          <Text style={styles.subtitle}>
+            Leads are only available for two hours — act fast.
+          </Text>
         </View>
       </View>
 
@@ -187,8 +208,12 @@ export default function Activity({ logs }: ActivityProps) {
                   <Text style={styles.metaLabel}>Ends At</Text>
                 </View>
                 <View style={styles.metaValueRow}>
-                  <Text style={styles.metaValue}>{formatDateTime(log.created_at)}</Text>
-                  <Text style={styles.metaValue}>{formatDateTime(log.end_time)}</Text>
+                  <Text style={styles.metaValue}>
+                    {formatDateTime(log.created_at)}
+                  </Text>
+                  <Text style={styles.metaValue}>
+                    {formatDateTime(log.end_time)}
+                  </Text>
                 </View>
               </View>
 
@@ -231,10 +256,15 @@ export default function Activity({ logs }: ActivityProps) {
         animationType="fade"
         onRequestClose={() => setConfirmVisible(false)}
       >
-        <Pressable style={styles.modalOverlay} onPress={() => setConfirmVisible(false)}>
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setConfirmVisible(false)}
+        >
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <Text style={styles.modalTitle}>Accept lead?</Text>
-            <Text style={styles.modalSubtitle}>This Lead {selectedLog?.fullname ?? "This lead"} will be assigned to you. Are your sure to accept this Lead?
+            <Text style={styles.modalSubtitle}>
+              This Lead {selectedLog?.fullname ?? "This lead"} will be assigned
+              to you. Are your sure to accept this Lead?
             </Text>
             <View style={styles.modalButtons}>
               <TouchableOpacity
@@ -258,7 +288,9 @@ export default function Activity({ logs }: ActivityProps) {
                 }}
                 disabled={isPending}
               >
-                <Text style={styles.modalConfirmText}>{isPending ? "Accepting..." : "Confirm"}</Text>
+                <Text style={styles.modalConfirmText}>
+                  {isPending ? "Accepting..." : "Confirm"}
+                </Text>
               </TouchableOpacity>
             </View>
           </Pressable>

@@ -1,4 +1,4 @@
-import { apiClient } from '@/utils/apiClient';
+import { apiClient } from "@/utils/apiClient";
 
 export type LoginRequest = {
   username: string;
@@ -30,8 +30,8 @@ export type LoginResponse = {
 };
 
 export const login = (payload: LoginRequest) =>
-  apiClient<LoginResponse>('app-login', {
-    method: 'POST',
+  apiClient<LoginResponse>("app-login", {
+    method: "POST",
     body: payload,
   });
 
@@ -62,8 +62,8 @@ export type SidebarResponse = {
 };
 
 export const loadSidebar = (payload: SidebarRequest) =>
-  apiClient<SidebarResponse>('app-load-menu', {
-    method: 'POST',
+  apiClient<SidebarResponse>("app-load-menu", {
+    method: "POST",
     body: payload,
   });
 
@@ -145,8 +145,8 @@ export type DashboardResponse = {
 };
 
 export const loadDashboard = (payload: DashboardRequest) =>
-  apiClient<DashboardResponse>('app-dashboard', {
-    method: 'POST',
+  apiClient<DashboardResponse>("app-dashboard", {
+    method: "POST",
     body: payload,
   });
 
@@ -165,7 +165,291 @@ export type AcceptLeadResponse = {
 };
 
 export const acceptLead = (payload: AcceptLeadRequest) =>
-  apiClient<AcceptLeadResponse>('accept-lead', {
-    method: 'POST',
+  apiClient<AcceptLeadResponse>("accept-lead", {
+    method: "POST",
+    body: payload,
+  });
+
+// Masters - Category
+export type CategoryItem = {
+  lcat_id: number;
+  lcat_name: string;
+};
+
+export type CategoryResponse = {
+  message: string;
+  status: number;
+  data: {
+    category: CategoryItem[];
+  };
+};
+
+export const loadCategories = () =>
+  apiClient<CategoryResponse>("get-category", { method: "GET" });
+
+// Masters - Property Requirement
+export type PropertyTypeItem = {
+  category_id: number;
+  main_category_id: number;
+  category_name: string;
+  pfix: string;
+  dfix: string;
+  ctype: string;
+  pf_category: string;
+};
+
+export type PropertyTypeResponse = {
+  message: string;
+  status: number;
+  data: {
+    property_type: PropertyTypeItem[];
+  };
+};
+
+export const loadPropertyTypes = () =>
+  apiClient<PropertyTypeResponse>("get-property-type", { method: "GET" });
+
+// Masters - Lead Type
+export type LeadTypeItem = {
+  ltype_id: number;
+  ltype_name: string;
+};
+
+export type LeadTypeResponse = {
+  message: string;
+  status: number;
+  data: {
+    lead_type: LeadTypeItem[];
+  };
+};
+
+export const loadLeadTypes = () =>
+  apiClient<LeadTypeResponse>("get-lead-type", { method: "GET" });
+
+// Cities
+export type CityItem = {
+  city_id: number;
+  country_id: number;
+  country_prefix: string;
+  city_name: string;
+  sort: number;
+};
+export type CitiesResponse = {
+  message: string;
+  status: number;
+  data: { cities: CityItem[] };
+};
+export const loadCities = () =>
+  apiClient<CitiesResponse>("get-cities", { method: "GET" });
+
+// Lead Status
+export type LeadStatusItem = {
+  lead_status_id: number;
+  lead_status_name: string;
+};
+export type LeadStatusResponse = {
+  message: string;
+  status: number;
+  data: { lead_status: LeadStatusItem[] };
+};
+export const loadLeadStatuses = () =>
+  apiClient<LeadStatusResponse>("get-lead-status", { method: "GET" });
+
+// Lead Sub Status (Main Status)
+export type LeadMainStatusItem = {
+  lead_main_status_id: number;
+  lead_main_status_name: string;
+};
+export type LeadMainStatusesResponse = {
+  message: string;
+  status: number;
+  data: { lead_main_statuses: LeadMainStatusItem[] };
+};
+export const loadLeadMainStatuses = () =>
+  apiClient<LeadMainStatusesResponse>("get-lead-main-statuses", {
+    method: "GET",
+  });
+
+// Lead Source
+export type LeadSourceItem = {
+  source_id: number;
+  source_name: string;
+  mstatus: number;
+};
+export type LeadSourceResponse = {
+  message: string;
+  status: number;
+  data: { source: LeadSourceItem[] };
+};
+export const loadLeadSources = () =>
+  apiClient<LeadSourceResponse>("get-lead-source", { method: "GET" });
+
+// Lead Channel
+export type LeadChannelItem = {
+  cid: number;
+  source_ids: string;
+  cname: string;
+};
+export type LeadChannelResponse = {
+  message: string;
+  status: number;
+  data: { lead_channel: LeadChannelItem[] };
+};
+export const loadLeadChannels = () =>
+  apiClient<LeadChannelResponse>("get-lead-channel", { method: "GET" });
+
+// Lead Campaign
+export type LeadCampaignItem = {
+  campaign_id: number;
+  campaign_name: string;
+  campaign_type: number;
+  rstatus: number;
+  start_date: string;
+  end_date: string;
+  form_name: string | null;
+  broucher: string | null;
+};
+export type LeadCampaignResponse = {
+  message: string;
+  status: number;
+  data: { lead_campaign: LeadCampaignItem[] };
+};
+export const loadLeadCampaigns = () =>
+  apiClient<LeadCampaignResponse>("get-lead-campaign", { method: "GET" });
+
+// Lead Agents
+export type LeadAgentItem = {
+  user_id: number;
+  display_name: string;
+  status: number;
+};
+export type LeadAgentsResponse = {
+  message: string;
+  status: number;
+  data: { lead_agents: LeadAgentItem[] };
+};
+export const loadLeadAgents = () =>
+  apiClient<LeadAgentsResponse>("get-lead-agents", { method: "GET" });
+
+// Lead Sanity
+export type LeadSanityItem = { id: number; name: string };
+export type LeadSanityResponse = {
+  message: string;
+  status: number;
+  data: { lead_sanity: LeadSanityItem[] };
+};
+export const loadLeadSanity = () =>
+  apiClient<LeadSanityResponse>("get-lead-sanity", { method: "GET" });
+
+// Save Lead
+export type SaveLeadRequest = {
+  lead_category: number;
+  lead_name: string;
+  lead_property_requirement: number;
+  lead_type: number;
+  lead_city: number;
+  lead_status: number;
+  lead_sub_status: number;
+  lead_source: number;
+  lead_mobile: string;
+  lead_channel: number;
+  lead_campaign: number;
+  lead_notes: string;
+  lead_id: string | number | ""; // empty string when creating
+  lead_email: string;
+  hot_lead: number;
+  lead_company: string;
+  lead_agent: number;
+  role_master_id: number;
+  lead_sanity: number;
+  device: string;
+  app_version: string;
+  user_id: string;
+};
+
+export type SaveLeadResponse = {
+  message: string;
+  status: number;
+  data: { lead_id: number };
+};
+
+export const saveLead = (payload: SaveLeadRequest) =>
+  apiClient<SaveLeadResponse>("save-lead", {
+    method: "POST",
+    body: payload,
+    
+  });
+
+// Filter Leads (filter-lead-app)
+// NOTE: This endpoint needs a JSON body, so use POST (even if docs say GET).
+export type FilterLeadAppRequest = {
+  user_id: string;
+  page_no: string | number;
+  limit: string | number;
+
+  lead_id?: string;
+  hot_lead?: string;
+  filter_firstname?: string;
+  filter_mobile?: string;
+  filter_email?: string;
+  filter_phone?: string;
+  filter_lead_main_type?: string;
+  filter_lead_type?: string;
+  filter_lead_status?: string;
+  filter_lead_sub_status?: string;
+  filter_category?: string;
+  filter_agent?: string;
+  filter_source?: string;
+  filter_channel?: string;
+  filter_campaigns?: string;
+  lead_sanity?: string;
+  date_created?: string;
+  type?:
+    | ""
+    | "Unattended"
+    | "Assigned"
+    | "PendingToAccept"
+    | "no_action"
+    | string;
+};
+
+export type FilterLeadAppItem = {
+  lead_id: number;
+  pfix: string;
+  date_created: string;
+  firstname: string;
+  lastname: string;
+  mobile: string;
+  phone: string;
+  email: string;
+  company_name: string;
+  ltype_id?: number;
+  ltype_name?: string;
+  lead_status_name: string;
+  lead_sub_status_name: string;
+  category_name: string;
+  city_name: string;
+  source_name: string;
+  channel_name: string;
+  campaign_name: string;
+  agent_fullname: string;
+  lead_main_status_name: string;
+  enc_id: string;
+  [key: string]: unknown;
+};
+
+export type FilterLeadAppResponse = {
+  message: string;
+  status: number;
+  data: {
+    recordsTotal: number;
+    recordsFiltered: number;
+    data: FilterLeadAppItem[];
+  };
+};
+
+export const filterLeadApp = (payload: FilterLeadAppRequest) =>
+  apiClient<FilterLeadAppResponse>("filter-lead-app", {
+    method: "POST",
     body: payload,
   });

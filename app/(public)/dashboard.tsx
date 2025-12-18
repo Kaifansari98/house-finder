@@ -114,7 +114,7 @@ export default function Dashboard() {
         </View>
 
         <View style={styles.ActivityContainer}>
-        <Activity logs={dashboardData.data.lead_assignment_log} />
+          <Activity logs={dashboardData.data.lead_assignment_log} />
         </View>
 
         {/* User Profile Card */}

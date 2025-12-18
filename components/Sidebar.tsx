@@ -1,17 +1,18 @@
 // components/Sidebar.tsx
+import { SidebarMenuItem } from "@/api/api";
+import { useRouter } from "expo-router";
+import { ChevronDown, ChevronRight } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
   Dimensions,
   Image,
   Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { ChevronDown, ChevronRight } from "lucide-react-native";
-import { SidebarMenuItem } from "@/api/api";
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.8; // Slightly wider for better readability
@@ -34,6 +35,7 @@ export default function Sidebar({
   onLogout,
 }: SidebarProps) {
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
+  const router = useRouter();
 
   const toggleExpand = (parentId: number) => {
     setExpandedIds((prev) => {
@@ -151,13 +153,25 @@ export default function Sidebar({
                           style={styles.childItem}
                           activeOpacity={0.7}
                           onPress={() => {
+                            if (child.id === 9) {
+                              router.push("/(public)/create-lead");
+                              onClose();
+                              return;
+                            }
+                            if (child.id === 8) {
+                              router.push("/(public)/view-all-leads");
+                              onClose();
+                              return;
+                            }
                             if (child.href) {
                               onMenuPress?.(child);
                               onClose();
                             }
                           }}
                         >
-                          <Text style={styles.childText}>{child.page_name}</Text>
+                          <Text style={styles.childText}>
+                            {child.page_name}
+                          </Text>
                         </TouchableOpacity>
                       ))}
                     </View>
