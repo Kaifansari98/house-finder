@@ -22,6 +22,8 @@ import {
   type LeadCampaignResponse,
   type LeadAgentsResponse,
   type LeadSanityResponse,
+  LeadActivityTypeResponse,
+  loadLeadActivityTypes,
 } from "@/api/api";
 
 export const useMastersData = () => {
@@ -61,13 +63,16 @@ export const useMastersData = () => {
     queryKey: ["masters", "lead-campaigns"],
     queryFn: loadLeadCampaigns,
   });
-  const leadAgentsQuery = useQuery<LeadAgentsResponse, Error>({
-    queryKey: ["masters", "lead-agents"],
-    queryFn: loadLeadAgents,
-  });
+
   const leadSanityQuery = useQuery<LeadSanityResponse, Error>({
     queryKey: ["masters", "lead-sanity"],
     queryFn: loadLeadSanity,
+  });
+
+    const leadActivityTypeQuery = useQuery<LeadActivityTypeResponse, Error>({
+    queryKey: ["masters", "lead-activity-types"],
+    queryFn: loadLeadActivityTypes,
+    staleTime: 10 * 60 * 1000,
   });
 
   return {
@@ -80,7 +85,16 @@ export const useMastersData = () => {
     leadSourceQuery,
     leadChannelQuery,
     leadCampaignQuery,
-    leadAgentsQuery,
     leadSanityQuery,
+    leadActivityTypeQuery
   };
+};
+
+export const useLeadAgents = (userId?: number) => {
+  return useQuery<LeadAgentsResponse, Error>({
+    queryKey: ["masters", "lead-agents", userId],
+    queryFn: () => loadLeadAgents(userId as number),
+    enabled: !!userId,
+    staleTime: 5 * 60 * 1000,
+  });
 };

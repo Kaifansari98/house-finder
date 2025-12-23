@@ -317,6 +317,25 @@ export type LeadCampaignResponse = {
 export const loadLeadCampaigns = () =>
   apiClient<LeadCampaignResponse>("get-lead-campaign", { method: "GET" });
 
+// Lead Activity Type
+
+export type leadActivityItem = {
+  history_type_id: number;
+  history_type: number;
+  history_type_name: string;
+  status: number;
+};
+
+export type LeadActivityTypeResponse = {
+  message: string;
+  status: number;
+  data: { lead_activity_type: leadActivityItem[] };
+};
+export const loadLeadActivityTypes = () =>
+  apiClient<LeadActivityTypeResponse>("get-lead-activity-type", {
+    method: "GET",
+  });
+
 // Lead Agents
 export type LeadAgentItem = {
   user_id: number;
@@ -328,8 +347,12 @@ export type LeadAgentsResponse = {
   status: number;
   data: { lead_agents: LeadAgentItem[] };
 };
-export const loadLeadAgents = () =>
-  apiClient<LeadAgentsResponse>("get-lead-agents", { method: "GET" });
+
+export const loadLeadAgents = (userId: number) =>
+  apiClient<LeadAgentsResponse>("get-lead-agents", {
+    method: "GET",
+    query: { user_id: userId },
+  });
 
 // Lead Sanity
 export type LeadSanityItem = { id: number; name: string };
@@ -377,7 +400,6 @@ export const saveLead = (payload: SaveLeadRequest) =>
   apiClient<SaveLeadResponse>("save-lead", {
     method: "POST",
     body: payload,
-    
   });
 
 // Filter Leads (filter-lead-app)
@@ -436,6 +458,7 @@ export type FilterLeadAppItem = {
   lead_main_status_name: string;
   enc_id: string;
   [key: string]: unknown;
+  enquiry_date: string;
 };
 
 export type FilterLeadAppResponse = {
@@ -452,4 +475,87 @@ export const filterLeadApp = (payload: FilterLeadAppRequest) =>
   apiClient<FilterLeadAppResponse>("filter-lead-app", {
     method: "POST",
     body: payload,
+  });
+
+export type LeadDetailItem = {
+  lead_id: number;
+  pfix: string;
+  is_report_sent: number;
+  source_id: number | null;
+  history_type: string | null;
+  date_created: string;
+  account_id: number;
+  created_by: number;
+
+  firstname: string;
+  lastname: string | null;
+  fullname: string;
+  mobile: string;
+  phone: string;
+  email: string;
+  company_name: string | null;
+
+  lead_status_id: number;
+  lead_status_name: string;
+  lead_sub_status_id: number;
+  lead_sub_status_name: string;
+
+  lead_main_status_id: number;
+  lead_main_status_name: string;
+  lead_main_type: string;
+
+  ltype_id: number;
+  ltype_name: string;
+
+  campaign_id: number;
+  campaign_name: string;
+
+  category_id: number;
+  category_name: string;
+
+  country_id: number;
+  country_name: string;
+  city_id: number;
+  city_name: string;
+
+  agent_fullname: string;
+  created_by_name: string;
+
+  enquiry_date: string;
+  followup_date: string | null;
+  close_date: string | null;
+  updated: string;
+
+  hot_lead: number;
+  priority: number;
+
+  source_name: string | null;
+  channel_name: string;
+
+  is_unattended: number;
+  quality_status: string;
+
+  lead_sanity: number;
+
+  [key: string]: unknown; // backend safety net
+};
+
+export type GetLeadDetailRequest = {
+  lead_id: string;
+};
+
+export type GetLeadDetailResponse = {
+  message: string;
+  status: number;
+  data: {
+    lead_detail: LeadDetailItem[];
+  };
+};
+
+export const getLeadDetails = (payload: GetLeadDetailRequest) =>
+  apiClient<GetLeadDetailResponse>("get-lead-detail", {
+    method: "GET",
+    query: {
+      lead_id: payload.lead_id, // 🔥 yahin bhejna hai
+    },
   });

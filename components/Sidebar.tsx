@@ -74,6 +74,8 @@ export default function Sidebar({
     return IconComponent ? <IconComponent size={20} color="#6b7280" /> : null;
   };
 
+  console.log(expandedIds);
+
   return (
     <>
       {/* Backdrop Overlay */}
@@ -111,6 +113,8 @@ export default function Sidebar({
               const hasChildren = children.length > 0;
               const Icon = getLucideIcon(parent.svg);
 
+
+            
               return (
                 <View key={parent.id}>
                   {/* Parent Menu Item */}
@@ -163,6 +167,13 @@ export default function Sidebar({
                               onClose();
                               return;
                             }
+                            if (child.id === 30) {
+                              router.push("/(public)/call-center");
+                            }
+                            if (child.id === 25) {
+                              router.push("/(public)/lead-enquiry")
+                            }
+
                             if (child.href) {
                               onMenuPress?.(child);
                               onClose();

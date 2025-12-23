@@ -1,15 +1,21 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { ArrowLeft } from "lucide-react-native";
+import { ArrowLeft, ListFilter, MoreVertical } from "lucide-react-native";
 import { useRouter } from "expo-router";
 
 type ScreenNavbarProps = {
   title: string;
   onBack?: () => void;
+  onMenuPress?: () => void; // ✅ NEW
 };
 
-export default function ScreenNavbar({ title, onBack }: ScreenNavbarProps) {
+export default function ScreenNavbar({
+  title,
+  onBack,
+  onMenuPress,
+}: ScreenNavbarProps) {
   const router = useRouter();
+
   const handleBack = () => {
     if (onBack) return onBack();
     router.back();
@@ -17,11 +23,32 @@ export default function ScreenNavbar({ title, onBack }: ScreenNavbarProps) {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.iconBtn} onPress={handleBack} activeOpacity={0.8}>
+      {/* Back */}
+      <TouchableOpacity
+        style={styles.iconBtn}
+        onPress={handleBack}
+        activeOpacity={0.8}
+      >
         <ArrowLeft size={20} color="#0f172a" strokeWidth={2.4} />
       </TouchableOpacity>
-      <Text style={styles.title} numberOfLines={1}>{title}</Text>
-      <View style={styles.placeholder} />
+
+      {/* Title */}
+      <Text style={styles.title} numberOfLines={1}>
+        {title}
+      </Text>
+
+      {/* Three Dot Menu */}
+      {onMenuPress ? (
+        <TouchableOpacity
+          style={styles.iconBtn}
+          onPress={onMenuPress}
+          activeOpacity={0.8}
+        >
+          <ListFilter size={20} color="#0f172a" strokeWidth={2.4} />
+        </TouchableOpacity>
+      ) : (
+        <View style={styles.placeholder} />
+      )}
     </View>
   );
 }
