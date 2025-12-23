@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.devxkaif.house-finder"
+      "bundleIdentifier": "com.devarfaj.house-finder"
     },
     "android": {
       "adaptiveIcon": {
@@ -21,7 +21,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.devxkaif.housefinder"
+      "package": "com.devarfaj.housefinder"
     },
     "web": {
       "output": "static",
@@ -42,11 +42,18 @@
         }
       ],
       "expo-font",
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "a8d96620-4f8d-48b0-8f9d-66986ee44d85"
+      }
     }
   }
 }

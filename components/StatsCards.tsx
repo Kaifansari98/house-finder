@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { ArrowUpRight, TrendingUp } from "lucide-react-native";
+import { Href, useRouter } from "expo-router";
 
 type StatsCardsProps = {
   totalLeads?: number;
@@ -9,17 +10,46 @@ type StatsCardsProps = {
   futureFollowup?: number;
 };
 
+type StatsCardItem = {
+  title: string;
+  value?: number;
+  trendColor: string;
+  route?: Href;
+};
+
 export default function StatsCards({
   totalLeads,
   missedFollowup,
   todayFollowup,
   futureFollowup,
 }: StatsCardsProps) {
-  const cards = [
-    { title: "Total Leads", value: totalLeads, trendColor: "#10b981" }, // green
-    { title: "Missed Follow Ups", value: missedFollowup, trendColor: "#ef4444" }, // red
-    { title: "Today Follow Ups", value: todayFollowup, trendColor: "#eab308" }, // yellow
-    { title: "Follow Ups", value: futureFollowup, trendColor: "#3b82f6" }, // blue
+  const router = useRouter();
+
+  const cards: StatsCardItem[] = [
+    {
+      title: "Total Leads",
+      value: totalLeads,
+      trendColor: "#10b981",
+      route: "/view-all-leads" as Href,
+    },
+    {
+      title: "Missed Follow Ups",
+      value: missedFollowup,
+      trendColor: "#ef4444",
+      route: "/leads?type=missed" as Href,
+    },
+    {
+      title: "Today Follow Ups",
+      value: todayFollowup,
+      trendColor: "#eab308",
+      route: "/leads?type=today" as Href,
+    },
+    {
+      title: "Follow Ups",
+      value: futureFollowup,
+      trendColor: "#3b82f6",
+      route: "/leads?type=future" as Href,
+    },
   ].filter((card) => card.value !== undefined && card.value !== null);
 
   if (cards.length === 0) return null;
@@ -27,8 +57,18 @@ export default function StatsCards({
   return (
     <View style={styles.grid}>
       {cards.map((item) => {
+        const CardWrapper = item.route ? TouchableOpacity : View;
         return (
-          <View key={item.title} style={styles.card}>
+          <CardWrapper
+            activeOpacity={0.85}
+            onPress={() => {
+              if (item.route) {
+                router.push(item.route);
+              }
+            }}
+            key={item.title}
+            style={styles.card}
+          >
             <View style={styles.cardContent}>
               {/* Top Row: Value + Trend + Arrow Icon */}
               <View style={styles.topRow}>
@@ -60,7 +100,7 @@ export default function StatsCards({
                 )}
               </View>
             </View>
-          </View>
+          </CardWrapper>
         );
       })}
     </View>

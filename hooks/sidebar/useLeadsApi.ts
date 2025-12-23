@@ -13,6 +13,7 @@ import {
   filterLeadApp,
   type FilterLeadAppRequest,
   type FilterLeadAppResponse,
+  getLeadDetails,
   saveLead,
   type SaveLeadRequest,
   type SaveLeadResponse,
@@ -55,15 +56,12 @@ type InfiniteLeadsPayload = Omit<FilterLeadAppRequest, "page_no" | "limit"> & {
 
 export const useInfiniteFilterLeadApp = (
   payload: InfiniteLeadsPayload | null
-): UseInfiniteQueryResult<
-  InfiniteData<FilterLeadAppResponse>,
-  Error
-> => {
-  return useInfiniteQuery<
-    FilterLeadAppResponse,
-    Error
-  >({
-    queryKey: ["filter-lead-app-infinite", payload],
+) => {
+  return useInfiniteQuery({
+    queryKey: [
+      "filter-lead-app-infinite",
+      payload ? JSON.stringify(payload) : null,
+    ],
     queryFn: ({ pageParam }) => {
       if (!payload) throw new Error("Missing filter payload");
 
@@ -86,8 +84,23 @@ export const useInfiniteFilterLeadApp = (
         lastPage.data?.recordsTotal ??
         0;
 
-      if (loadedCount >= total) return undefined;
-      return allPages.length; // 0,1,2...
+      return loadedCount >= total ? undefined : allPages.length;
     },
   });
 };
+
+
+  export const useLeadDetails = (lead_id?: string) => {
+    return useQuery({
+      queryKey: ["lead-details", lead_id],
+      queryFn: async () => {
+        if (!lead_id) throw new Error("Lead ID is required");
+
+        const res = await getLeadDetails({ lead_id });
+
+        // backend array → single object
+        return res.data.lead_detail[0];
+      },
+      enabled: !!lead_id,
+    });
+  };

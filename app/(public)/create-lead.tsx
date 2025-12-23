@@ -146,7 +146,7 @@ export default function CreateLead() {
     leadSourceQuery,
     leadChannelQuery,
     leadCampaignQuery,
-    leadAgentsQuery,
+    // leadAgentsQuery,
     leadSanityQuery,
   } = useMastersData();
 
@@ -282,15 +282,15 @@ export default function CreateLead() {
     [leadCampaignQuery.data]
   );
 
-  const leadAgents = useMemo(
-    () =>
-      mapOptions(
-        leadAgentsQuery.data?.data.lead_agents,
-        "display_name",
-        "user_id"
-      ),
-    [leadAgentsQuery.data]
-  );
+  // const leadAgents = useMemo(
+  //   () =>
+  //     mapOptions(
+  //       leadAgentsQuery.data?.data.lead_agents,
+  //       "display_name",
+  //       "user_id"
+  //     ),
+  //   [leadAgentsQuery.data]
+  // );
 
   const leadSanities = useMemo(
     () => mapOptions(leadSanityQuery.data?.data.lead_sanity, "name", "id"),
@@ -466,13 +466,13 @@ export default function CreateLead() {
           onChange={(v) => setForm((p) => ({ ...p, lead_campaign: v }))}
           loading={leadCampaignQuery.isLoading}
         />
-        <SelectField
+        {/* <SelectField
           label="Agent"
           options={leadAgents}
           value={form.lead_agent}
           onChange={(v) => setForm((p) => ({ ...p, lead_agent: v }))}
           loading={leadAgentsQuery.isLoading}
-        />
+        /> */}
         <SelectField
           label="Lead Sanity"
           options={leadSanities}
