@@ -1,16 +1,8 @@
 {
-  "cli": {
-    "version": ">= 5.9.0",
-    "appVersionSource": "remote"
-  },
+  "cli": { "version": ">= 5.0.0" },
   "build": {
     "preview": {
-      "node": "20.11.0",
-      "npm": "10.8.2",
-      "packager": "npm",
-      "android": {
-        "buildType": "apk"
-      }
+      "android": { "buildType": "apk" }
     },
     "production": {}
   }
