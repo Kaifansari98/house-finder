@@ -404,7 +404,10 @@ export default function EditLead() {
   /* ================= UI ================= */
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+    <SafeAreaView
+      edges={["top", "left", "right", "bottom"]}
+      style={styles.safeArea}
+    >
       <ScreenNavbar title="Update Lead Details" />
 
       {/* Toast Component */}

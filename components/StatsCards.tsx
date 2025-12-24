@@ -90,14 +90,14 @@ export default function StatsCards({
                     ? item.value
                     : Number(item.value) || 0}
                 </Text>
-                {Number(item.value) > 0 && (
+                {/* {Number(item.value) > 0 && (
                   <TrendingUp
                     size={14}
                     color={item.trendColor}
                     strokeWidth={2.5}
                     style={{ marginBottom: 3, marginLeft: 4 }}
                   />
-                )}
+                )} */}
               </View>
             </View>
           </CardWrapper>

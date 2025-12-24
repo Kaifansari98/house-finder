@@ -113,8 +113,6 @@ export default function Sidebar({
               const hasChildren = children.length > 0;
               const Icon = getLucideIcon(parent.svg);
 
-
-            
               return (
                 <View key={parent.id}>
                   {/* Parent Menu Item */}
@@ -171,7 +169,15 @@ export default function Sidebar({
                               router.push("/(public)/call-center");
                             }
                             if (child.id === 25) {
-                              router.push("/(public)/lead-enquiry")
+                              router.push("/(public)/lead-enquiry");
+                            }
+
+                            if (child.id == 20) {
+                              router.push("/(public)/add-today-task");
+                            }
+
+                            if (child.id === 21) {
+                              router.push("/(public)/my-task");
                             }
 
                             if (child.href) {

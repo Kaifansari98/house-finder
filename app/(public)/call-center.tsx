@@ -146,8 +146,14 @@ const CallCenter = () => {
               <Text style={styles.mobileText}>{item.mobile}</Text>
             </View>
           </View>
-          <TouchableOpacity>
-            <Laptop size={22} color="#9ca3af" strokeWidth={2.4} />
+          <TouchableOpacity
+            style={styles.actionButton}
+            activeOpacity={0.7}
+            onPress={() => {
+              // open action sheet / modal later
+            }}
+          >
+            <Laptop size={18} color="#9ca3af" strokeWidth={2.2} />
           </TouchableOpacity>
         </View>
 
@@ -386,13 +392,13 @@ const styles = StyleSheet.create({
   nameText: {
     color: "#0f172a",
     fontWeight: "800",
-    fontSize: 17,
+    fontSize: 16,
     textTransform: "capitalize",
   },
   mobileText: {
     color: "#6b7280",
     fontWeight: "600",
-    fontSize: 14,
+    fontSize: 13,
     marginTop: 1,
   },
   headerContainer: {
@@ -424,7 +430,7 @@ const styles = StyleSheet.create({
   },
   labelText: {
     fontWeight: "600",
-    fontSize: 16,
+    fontSize: 14,
     color: "#0f172a",
     flex: 1,
   },
@@ -452,7 +458,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   noteText: {
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: "500",
     color: "#4b5563",
     lineHeight: 15,
@@ -486,5 +492,15 @@ const styles = StyleSheet.create({
   clearFilterText: {
     fontWeight: "700",
     color: "#0f172a",
+  },
+  actionButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+    backgroundColor: "#F3F4F6",
+    borderColor: "#E5E7EB",
   },
 });

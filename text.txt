@@ -1,0 +1,38 @@
+| Color Code | Usage                                                       |
+| ---------- | ----------------------------------------------------------- |
+| `#FFFFFF`  | Card background (`itemContainer`)                           |
+| `#EFBF04`  | Avatar background, primary CTA (`avatar`, `clearFilterBtn`) |
+| `#F9FAFB`  | Notes container background (`noteContainer`)                |
+
+
+| Color Code | Usage                                                               |
+| ---------- | ------------------------------------------------------------------- |
+| `#E5E7EB`  | Card border, action button border (`itemContainer`, `actionButton`) |
+| `#9ca3af`  | Left accent border in notes (`noteContainer`)                       |
+
+
+| Color Code | Usage                                    |
+| ---------- | ---------------------------------------- |
+| `#0f172a`  | Name text, avatar text, labels, CTA text |
+
+
+| Color Code | Usage                                     |
+| ---------- | ----------------------------------------- |
+| `#6b7280`  | Mobile number, note label, empty subtitle |
+| `#4b5563`  | Note body text                            |
+
+
+| Color Code | Usage                     |
+| ---------- | ------------------------- |
+| `#9ca3af`  | Icons, note border accent |
+| `#E5E7EB`  | Neutral borders           |
+
+
+#FFFFFF  → Base background
+#F9FAFB  → Soft background (notes)
+#EFBF04  → Brand / Primary accent
+#0f172a  → Primary text
+#6b7280  → Secondary text
+#4b5563  → Muted text
+#9ca3af  → Icons / subtle accents
+#E5E7EB  → Borders / dividers

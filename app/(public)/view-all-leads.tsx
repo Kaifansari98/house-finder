@@ -238,7 +238,10 @@ export default function ViewAllLeads() {
 
   if (!isHydrated) {
     return (
-      <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+      <SafeAreaView
+        edges={["top", "left", "right", "bottom"]}
+        style={styles.safeArea}
+      >
         <ScreenNavbar title="View All Leads" />
         <View style={styles.center}>
           <ActivityIndicator />
@@ -329,7 +332,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#e5e7eb",
     gap: 12,
-    borderRadius: 14,
+    borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 10,
     marginBottom: 10,
