@@ -2,18 +2,14 @@ import React from "react";
 import { Modal, View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { CircleX } from "lucide-react-native";
+import { LeadEnquiryItem } from "@/api/enquiryapi";
 
 /* ================= TYPES ================= */
 
 type EditEnquiryModalProps = {
   visible: boolean;
   onClose: () => void;
-  item: {
-    leadName?: string | null;
-    budget: number;
-    paymentType: string;
-    location: string;
-  } | null;
+  item: LeadEnquiryItem | null
 };
 
 /* ================= COMPONENT ================= */

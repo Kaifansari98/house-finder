@@ -1,6 +1,12 @@
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { useQueryClient } from "@tanstack/react-query";
-import { CircleX, Calendar, Tag, StickyNote } from "lucide-react-native";
+import {
+  CircleX,
+  Calendar,
+  Tag,
+  StickyNote,
+  CalendarFoldIcon,
+} from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
   Modal,
@@ -9,8 +15,10 @@ import {
   TextInput,
   TouchableOpacity,
   View,
+  ScrollView,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { z } from "zod";
 
 import {
   useLeadActivities,
@@ -20,13 +28,27 @@ import { useMastersData } from "@/hooks/sidebar/masters/useMastersData";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
 import SelectField from "./SmartDropDown";
 import Toast from "@/components/Toast";
-import { ScrollView } from "react-native-gesture-handler";
 
 type Props = {
   visible: boolean;
   onClose: () => void;
   leadId: string;
   referenceNo: string;
+};
+
+const activitySchema = z.object({
+  activityType: z.preprocess(
+    (val) => (typeof val === "string" ? val : ""),
+    z.string().min(1, "Activity type is required")
+  ),
+  followUpDate: z.date().optional(),
+  activityNotes: z.string().min(1, "Activity notes are required"),
+});
+
+type FormErrors = {
+  activityType?: string;
+  followUpDate?: string;
+  activityNotes?: string;
 };
 
 export default function LeadTerminalModal({
@@ -74,6 +96,7 @@ export default function LeadTerminalModal({
   const [activityType, setActivityType] = useState<string>();
   const [activityNotes, setActivityNotes] = useState("");
   const [followUpDate, setFollowUpDate] = useState<Date | null>(null);
+  const [errors, setErrors] = useState<FormErrors>({});
 
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -98,22 +121,16 @@ export default function LeadTerminalModal({
     return (words[0][0] + words[words.length - 1][0]).toUpperCase();
   };
 
-  const formatDate = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return `${String(d.getDate()).padStart(2, "0")}/${String(
-      d.getMonth() + 1
-    ).padStart(2, "0")}/${d.getFullYear()} ${String(d.getHours()).padStart(
-      2,
-      "0"
-    )}:${String(d.getMinutes()).padStart(2, "0")}`;
-  };
-
   /* ================= DATE HANDLERS ================= */
   const onDateChange = (_: any, date?: Date) => {
     setShowDatePicker(false);
     if (!date) return;
     setFollowUpDate(date);
     setShowTimePicker(true);
+    // Clear error when date is selected
+    if (errors.followUpDate) {
+      setErrors((prev) => ({ ...prev, followUpDate: undefined }));
+    }
   };
 
   const onTimeChange = (_: any, time?: Date) => {
@@ -124,34 +141,69 @@ export default function LeadTerminalModal({
     setFollowUpDate(final);
   };
 
+  /* ================= VALIDATION ================= */
+  const validateForm = (): boolean => {
+    try {
+      activitySchema.parse({
+        activityType,
+        activityNotes,
+      });
+
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const formattedErrors: FormErrors = {};
+
+        error.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof FormErrors | undefined;
+          if (field) {
+            formattedErrors[field] = issue.message;
+          }
+        });
+
+        setErrors(formattedErrors);
+      }
+
+      return false;
+    }
+  };
+
   /* ================= SAVE ================= */
   const handleSave = () => {
-    if (!userId || !activityType || !followUpDate || !activityNotes.trim()) {
-      showToast("error", "Please fill all required fields");
+    if (!userId) {
+      showToast("error", "User not authenticated");
       return;
     }
 
-    saveActivity(
-      {
-        lead_id: leadId,
-        user_id: userId,
-        activity_type: Number(activityType),
-        activity_notes: activityNotes,
+    if (!validateForm()) {
+      showToast("error", "Please fix the errors before saving");
+      return;
+    }
+
+    const payload = {
+      lead_id: leadId,
+      user_id: userId,
+      activity_type: Number(activityType),
+      activity_notes: activityNotes,
+      ...(followUpDate && {
         followup_date: followUpDate.toISOString(),
+      }),
+    };
+
+    saveActivity(payload, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({
+          queryKey: ["lead-activities", leadId],
+        });
+        setActivityType(undefined);
+        setActivityNotes("");
+        setFollowUpDate(null);
+        setErrors({});
+        showToast("success", "Activity saved successfully");
       },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["lead-activities", leadId],
-          });
-          setActivityType(undefined);
-          setActivityNotes("");
-          setFollowUpDate(null);
-          showToast("success", "Activity saved successfully");
-        },
-        onError: () => showToast("error", "Failed to save activity"),
-      }
-    );
+      onError: () => showToast("error", "Failed to save activity"),
+    });
   };
 
   /* ================= ACTIVITY CARD ================= */
@@ -167,6 +219,11 @@ export default function LeadTerminalModal({
           <Text style={styles.displayName}>{item.display_name}</Text>
           <Text style={styles.historyId}>{item.history_id}</Text>
         </View>
+
+        <View style={styles.timeContainer}>
+          <CalendarFoldIcon size={15} color="#9ca3af" strokeWidth={2} />
+          <Text style={styles.statusText}>{item.date}</Text>
+        </View>
       </View>
 
       <View style={styles.infoRowFlex}>
@@ -177,7 +234,6 @@ export default function LeadTerminalModal({
         {item.followup && (
           <View style={styles.infoRow}>
             <Calendar size={16} color="#9CA3AF" />
-            <Text>{formatDate(item.followup)}</Text>
           </View>
         )}
       </View>
@@ -203,7 +259,7 @@ export default function LeadTerminalModal({
           <View style={styles.header}>
             <Text style={styles.title}>Lead Terminal : {referenceNo}</Text>
             <TouchableOpacity onPress={onClose}>
-              <CircleX size={22} />
+              <CircleX size={22} color="#0f172a" />
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -219,16 +275,27 @@ export default function LeadTerminalModal({
                 options={activityTypeOptions}
                 value={activityType}
                 loading={leadActivityTypeQuery.isLoading}
-                onChange={setActivityType}
+                onChange={(value) => {
+                  setActivityType(value);
+                  if (errors.activityType) {
+                    setErrors((prev) => ({ ...prev, activityType: undefined }));
+                  }
+                }}
+                textError={errors.activityType}
               />
 
               <View style={styles.field}>
                 <Text style={styles.label}>Follow-up Date & Time</Text>
                 <TouchableOpacity
-                  style={styles.dateInput}
+                  style={[styles.dateInput]}
                   onPress={() => setShowDatePicker(true)}
                 >
-                  <Text>
+                  <Text
+                    style={[
+                      styles.dateText,
+                      !followUpDate && { color: "#9ca3af" },
+                    ]}
+                  >
                     {followUpDate
                       ? followUpDate.toLocaleString()
                       : "Select date & time"}
@@ -241,12 +308,28 @@ export default function LeadTerminalModal({
                   Activity Notes <Text style={{ color: "#EF4444" }}>*</Text>
                 </Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    errors.activityNotes && styles.inputError,
+                  ]}
                   value={activityNotes}
-                  onChangeText={setActivityNotes}
+                  onChangeText={(text) => {
+                    setActivityNotes(text);
+                    if (errors.activityNotes) {
+                      setErrors((prev) => ({
+                        ...prev,
+                        activityNotes: undefined,
+                      }));
+                    }
+                  }}
                   multiline
                   placeholder="Write activity details here..."
+                  placeholderTextColor="#9ca3af"
                 />
+                {errors.activityNotes && (
+                  <Text style={styles.errorText}>{errors.activityNotes}</Text>
+                )}
               </View>
 
               <View style={styles.actionRow}>
@@ -287,8 +370,6 @@ export default function LeadTerminalModal({
               )}
             </View>
           </ScrollView>
-
-          {/* LIST */}
         </SafeAreaView>
       </View>
 
@@ -358,10 +439,12 @@ const styles = StyleSheet.create({
   },
   field: {},
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 6,
     color: "#0f172a",
+    marginBottom: 5,
+    textTransform: "capitalize",
+    letterSpacing: 0.5,
   },
   input: {
     borderWidth: 1,
@@ -377,8 +460,12 @@ const styles = StyleSheet.create({
   dateInput: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 10,
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0f172a",
     padding: 12,
+    backgroundColor: "#FFFFFF",
   },
   dateText: {
     fontWeight: "600",
@@ -424,22 +511,23 @@ const styles = StyleSheet.create({
   activityCard: {
     borderWidth: 1,
     borderColor: "#E5E7EB",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
-    backgroundColor: "#FAFAFA",
-    gap: 10,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 10,
+    backgroundColor: "#FFFFFF",
+    gap: 7,
   },
   cardHeader: {
     flexDirection: "row",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 10,
+    justifyContent: "space-between",
     paddingBottom: 10,
   },
   avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     backgroundColor: "#EFBF04",
     alignItems: "center",
     justifyContent: "center",
@@ -453,10 +541,10 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   displayName: {
-    fontSize: 15,
-    fontWeight: "700",
     color: "#0f172a",
-    marginBottom: 2,
+    fontWeight: "800",
+    fontSize: 16,
+    textTransform: "capitalize",
   },
   idRow: {
     flexDirection: "row",
@@ -479,44 +567,31 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   activityType: {
+    fontWeight: "600",
     fontSize: 14,
-    fontWeight: "700",
     color: "#0f172a",
-  },
-  dateTexts: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#4B5563",
-  },
-  followupLabel: {
-    fontSize: 11,
-    fontWeight: "600",
-    color: "#EF4444",
-    marginBottom: 2,
-  },
-  followupDate: {
-    fontSize: 13,
-    fontWeight: "700",
-    color: "#EF4444",
+    textTransform: "capitalize",
   },
   noteContainer: {
-    marginTop: 6,
-    padding: 10,
-    backgroundColor: "#F3F4F6",
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: "#6b7280",
+    marginHorizontal: 4,
+    padding: 7,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 6,
+    borderLeftWidth: 2,
+    borderLeftColor: "#9ca3af",
   },
   noteHeader: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    marginBottom: 6,
+    gap: 4,
+    marginBottom: 3,
   },
   noteLabel: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "700",
     color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   noteText: {
     fontSize: 13,
@@ -532,5 +607,39 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
     color: "#9CA3AF",
+  },
+
+  timeContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "#F9FAFB",
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+  },
+
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+
+  inputFocused: {
+    borderColor: "#EFBF04",
+    borderWidth: 1.5,
+  },
+
+  inputError: {
+    borderColor: "#ef4444",
+    borderWidth: 1,
+  },
+
+  errorText: {
+    marginTop: 4,
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#ef4444",
   },
 });

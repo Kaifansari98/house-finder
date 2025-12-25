@@ -83,7 +83,6 @@ const AddTodayTask = () => {
     const updateTask = tasks.filter((_, i) => i !== index);
     setTask(updateTask);
   };
-
   const updateTaskField = (
     index: number,
     field: "description" | "time",
@@ -92,6 +91,16 @@ const AddTodayTask = () => {
     const newTasks = [...tasks];
     newTasks[index][field] = value;
     setTask(newTasks);
+
+    // ✅ CLEAR FIELD ERROR ON CHANGE
+    if (errors[index]?.[field]) {
+      const newErrors = [...errors];
+      newErrors[index] = {
+        ...newErrors[index],
+        [field]: undefined,
+      };
+      setErrors(newErrors);
+    }
   };
 
   console.log("userId: ", userId);
@@ -252,7 +261,9 @@ const AddTodayTask = () => {
           onPress={handleSave}
           activeOpacity={0.8}
         >
-          <Text style={styles.saveBtnText}>Save Tasks</Text>
+          <Text style={styles.saveBtnText}>
+            {isPending ? "Saving..." : "Save Tasks"}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

@@ -1,8 +1,10 @@
 import {
   getMyTasks,
+  getTeamTask,
   MyTaskRequest,
   saveTask,
   SaveTasksRequest,
+  TeamTaskRequest,
 } from "@/api/taskapi";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
@@ -14,12 +16,29 @@ export const useSaveTasks = () => {
 
 export const useMyTasks = (payload?: MyTaskRequest) => {
   return useQuery({
-    queryKey: ["my-tasks",],
+    queryKey: ["my-tasks", payload?.user_id, payload?.date],
     queryFn: async () => {
       const res = await getMyTasks(payload as MyTaskRequest);
       return res.data.task_details;
     },
     enabled: !!payload?.user_id && !!payload?.date,
-    staleTime: 1000 * 60 * 5, // 5 min cache
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+export const useTeamTask = (payload?: TeamTaskRequest) => {
+  return useQuery({
+    queryKey: [
+      "team-tasks",
+      payload?.user_id,
+      payload?.date,
+      payload?.agent_id,
+    ],
+    queryFn: async () => {
+      const res = await getTeamTask(payload as TeamTaskRequest);
+      return res.data.task_details;
+    },
+    enabled: !!payload?.user_id && !!payload?.date,
+    staleTime: 1000 * 60 * 5, // 5 min
   });
 };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -21,8 +21,10 @@ import ScreenNavbar from "@/components/ScreenNavbar";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
 
 import type { MyTaskItem } from "@/api/taskapi";
-import { useMyTasks } from "@/hooks/task/useTask";
+import { useTeamTask } from "@/hooks/task/useTask";
 import { formatDateWithTime } from "@/utils/utils";
+import { useLeadAgents } from "@/hooks/sidebar/masters/useMastersData";
+import SelectField from "@/modals/SmartDropDown";
 
 /* ================= UTILS ================= */
 
@@ -39,29 +41,51 @@ const formatDisplayDate = (date: Date) => {
   return date.toLocaleDateString("en-GB", options);
 };
 
-
-
 /* ================= COMPONENT ================= */
 
-const MyTask = () => {
+const TeamTasks = () => {
   const authData = useAuthStore(selectAuthData);
-  const userId = authData?.encrypted_user_id;
+  const user_id_enc = authData?.encrypted_user_id;
+  const userId = authData?.user.user_id;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedAgent, setSelectedAgent] = useState<string>("");
   const [showPicker, setShowPicker] = useState(false);
 
   const formattedDate = formatDate(selectedDate);
 
-  const { data, isLoading, isError, refetch } = useMyTasks({
-    user_id: userId!,
+  // Team Task Query with agent_id filter
+  const { data, isLoading, isError, refetch } = useTeamTask({
+    user_id: user_id_enc!,
     date: formattedDate,
+    agent_id: selectedAgent || undefined, // Only pass if selected
   });
+
+  const { data: agentsData, isLoading: agentsLoading } = useLeadAgents(userId);
+
+  const map = (arr: any[] | undefined, l: string, v: string) =>
+    arr?.map((i) => ({ label: String(i[l]), value: String(i[v]) })) ?? [];
 
   const tasks = data ?? [];
 
   const handleDelete = (taskId: number) => {
     console.log("Delete task:", taskId);
+    // Add your delete logic here
   };
+
+  const agents = useMemo(
+    () => map(agentsData?.data?.lead_agents, "display_name", "user_id"),
+    [agentsData]
+  );
+
+  React.useEffect(() => {
+    if (!selectedAgent && agents.length > 0) {
+      setSelectedAgent("1"); // fallback default
+    }
+  }, [agents]);
+
+  const shouldShowAgentDropdown =
+    agents.length > 0 && agents.some((a) => a.value === selectedAgent);
 
   /* ================= RENDER ITEM ================= */
 
@@ -89,7 +113,9 @@ const MyTask = () => {
 
             <View style={[styles.timeContainer]}>
               <CalendarFoldIcon size={15} color="#9ca3af" strokeWidth={2} />
-              <Text style={[styles.statusText]}>{formatDateWithTime(item.created_at)}</Text>
+              <Text style={[styles.statusText]}>
+                {formatDateWithTime(item.created_at)}
+              </Text>
             </View>
           </View>
 
@@ -114,7 +140,9 @@ const MyTask = () => {
       </View>
       <Text style={styles.emptyTitle}>No Tasks Found</Text>
       <Text style={styles.emptyText}>
-        There are no tasks scheduled for this date.
+        {selectedAgent
+          ? "No tasks found for the selected agent."
+          : "There are no tasks scheduled for this date."}
       </Text>
     </View>
   );
@@ -123,18 +151,38 @@ const MyTask = () => {
 
   return (
     <SafeAreaView edges={["top", "left", "right"]} style={styles.safe}>
-      <ScreenNavbar title="My Tasks" />
+      <ScreenNavbar title="Team Tasks" />
 
-      {/* DATE PICKER */}
-      <View style={styles.dateContainer}>
-        <TouchableOpacity
-          style={styles.dateBtn}
-          onPress={() => setShowPicker(true)}
-          activeOpacity={0.7}
-        >
-          <Calendar size={18} color="#0f172a" strokeWidth={2} />
-          <Text style={styles.dateText}>{formatDisplayDate(selectedDate)}</Text>
-        </TouchableOpacity>
+      {/* DATE PICKER & AGENT FILTER */}
+      <View style={styles.inputContainer}>
+        {/* DATE */}
+        <View style={styles.dateContainer}>
+          <Text style={styles.inputLabel}>Filter by date</Text>
+          <TouchableOpacity
+            style={styles.dateBtn}
+            onPress={() => setShowPicker(true)}
+            activeOpacity={0.7}
+          >
+            <Calendar size={18} color="#0f172a" strokeWidth={2} />
+            <Text style={styles.dateText}>
+              {formatDisplayDate(selectedDate)}
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* AGENT SELECT */}
+        {shouldShowAgentDropdown && (
+          <SelectField
+            label="Filter by Agent"
+            options={agents}
+            loading={agentsLoading}
+            disabled={!userId}
+            value={selectedAgent}
+            onChange={(val) => {
+              setSelectedAgent(val ?? "");
+            }}
+          />
+        )}
       </View>
 
       {showPicker && (
@@ -178,7 +226,7 @@ const MyTask = () => {
   );
 };
 
-export default MyTask;
+export default TeamTasks;
 
 /* ================= STYLES ================= */
 
@@ -188,9 +236,11 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
   },
 
-  dateContainer: {
+  inputContainer: {
     padding: 10,
+    gap: 5,
   },
+
   dateBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -212,6 +262,10 @@ const styles = StyleSheet.create({
     padding: 10,
   },
 
+  dateContainer: {
+    width: "100%",
+  },
+
   taskCard: {
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
@@ -222,6 +276,14 @@ const styles = StyleSheet.create({
     gap: 10,
   },
 
+  inputLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#0f172a",
+    marginBottom: 5,
+    textTransform: "capitalize",
+    letterSpacing: 0.5,
+  },
   taskContent: {
     flexDirection: "row",
     gap: 12,
@@ -236,12 +298,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#0f172a",
     lineHeight: 22,
-  },
-
-  divider: {
-    height: 1,
-    backgroundColor: "#E5E7EB",
-    marginVertical: 12,
   },
 
   metaRow: {
@@ -272,36 +328,12 @@ const styles = StyleSheet.create({
     color: "#4b5563",
   },
 
-  statusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 6,
-  },
-
-  statusBadgeActive: {
-    backgroundColor: "#dcfce7",
-  },
-
-  statusBadgeInactive: {
-    backgroundColor: "#fee2e2",
-  },
-
   statusText: {
     fontSize: 11,
     fontWeight: "700",
+    color: "#6b7280",
     textTransform: "uppercase",
     letterSpacing: 0.5,
-  },
-
-  statusActive: {
-    color: "#15803d",
-  },
-
-  statusInactive: {
-    color: "#991B1B",
   },
 
   deleteBtn: {

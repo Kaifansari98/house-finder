@@ -17,13 +17,11 @@ import { getInitials, normalizeStatusKey } from "@/utils/utils";
 import {
   Building2,
   Calendar,
-  ChevronRight,
   Laptop,
   Mail,
   MapPin,
   MapPinned,
   StickyNote,
-  Timer,
   UserCheck,
 } from "lucide-react-native";
 import StatusDot from "@/components/StatusDot";

@@ -170,66 +170,73 @@ export default function LeadFilterModal({
                   />
                 </View>
 
-                <SelectField
-                  label="Lead Status"
-                  options={leadStatuses}
-                  value={values.lead_status}
-                  onChange={(v) =>
-                    onChange({ ...values, lead_status: v ?? "" })
-                  }
-                />
+                <View style={styles.field}>
+                  <SelectField
+                    label="Lead Status"
+                    options={leadStatuses}
+                    value={values.lead_status}
+                    onChange={(v) =>
+                      onChange({ ...values, lead_status: v ?? "" })
+                    }
+                  />
+                </View>
               </View>
-
               <View style={styles.row}>
-                <SelectField
-                  label="Lead Sub Status"
-                  options={leadSubStatuses}
-                  value={values.lead_sub_status}
-                  onChange={(v) =>
-                    onChange({
-                      ...values,
-                      lead_sub_status: v ?? "",
-                    })
-                  }
-                />
-
-                <SelectField
-                  label="Source"
-                  options={sources}
-                  value={values.lead_source}
-                  onChange={(v) =>
-                    onChange({
-                      ...values,
-                      lead_source: v ?? "",
-                    })
-                  }
-                />
+                <View style={styles.field}>
+                  <SelectField
+                    label="Lead Sub Status"
+                    options={leadSubStatuses}
+                    value={values.lead_sub_status}
+                    onChange={(v) =>
+                      onChange({
+                        ...values,
+                        lead_sub_status: v ?? "",
+                      })
+                    }
+                  />
+                </View>
+                <View style={styles.field}>
+                  <SelectField
+                    label="Source"
+                    options={sources}
+                    value={values.lead_source}
+                    onChange={(v) =>
+                      onChange({
+                        ...values,
+                        lead_source: v ?? "",
+                      })
+                    }
+                  />
+                </View>
               </View>
-
               <View style={styles.row}>
-                <SelectField
-                  label="Channel"
-                  options={channels}
-                  value={values.lead_channel}
-                  onChange={(v) =>
-                    onChange({
-                      ...values,
-                      lead_channel: v ?? "",
-                    })
-                  }
-                />
+                <View style={styles.field}>
+                  <SelectField
+                    label="Channel"
+                    options={channels}
+                    value={values.lead_channel}
+                    onChange={(v) =>
+                      onChange({
+                        ...values,
+                        lead_channel: v ?? "",
+                      })
+                    }
+                  />
+                </View>
 
-                <SelectField
-                  label="Campaign"
-                  options={campaigns}
-                  value={values.lead_campaign}
-                  onChange={(v) =>
-                    onChange({
-                      ...values,
-                      lead_campaign: v ?? "",
-                    })
-                  }
-                />
+                <View style={styles.field}>
+                  <SelectField
+                    label="Campaign"
+                    options={campaigns}
+                    value={values.lead_campaign}
+                    onChange={(v) =>
+                      onChange({
+                        ...values,
+                        lead_campaign: v ?? "",
+                      })
+                    }
+                  />
+                </View>
               </View>
 
               <SelectField

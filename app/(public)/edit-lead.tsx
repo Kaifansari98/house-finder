@@ -403,6 +403,7 @@ export default function EditLead() {
 
   /* ================= UI ================= */
 
+  console.log("form ", form)
   return (
     <SafeAreaView
       edges={["top", "left", "right", "bottom"]}

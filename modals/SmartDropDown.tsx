@@ -159,14 +159,16 @@ export default function SelectField({
 
 const styles = StyleSheet.create({
   field: {
-    flex: 1,
+   width: "100%"
   },
 
   label: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "700",
-    marginBottom: 6,
     color: "#0f172a",
+    marginBottom: 5,
+    textTransform: "capitalize",
+    letterSpacing: 0.5,
   },
 
   trigger: {
@@ -176,7 +178,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    borderRadius: 10,
+    borderRadius: 8,
     backgroundColor: "#fff",
   },
 
@@ -187,6 +189,7 @@ const styles = StyleSheet.create({
 
   errorBorder: {
     borderColor: "#EF4444",
+    borderWidth: 1,
   },
 
   triggerText: {
@@ -209,7 +212,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
     fontSize: 12,
     fontWeight: "600",
-    color: "#EF4444",
+    color: "#ef4444",
   },
 
   /* ---------------- modal ---------------- */
@@ -245,10 +248,14 @@ const styles = StyleSheet.create({
 
   searchInput: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 10,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    fontSize: 14,
+    fontWeight: "500",
+    color: "#0f172a",
     padding: 12,
-    marginBottom: 10,
+    paddingLeft: 10,
+    backgroundColor: "#FFFFFF",
   },
 
   option: {

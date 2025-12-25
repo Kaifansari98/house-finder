@@ -2,7 +2,7 @@
 import { SidebarMenuItem } from "@/api/api";
 import { useRouter } from "expo-router";
 import { ChevronDown, ChevronRight } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Dimensions,
   Image,
@@ -16,6 +16,32 @@ import {
 
 const { width } = Dimensions.get("window");
 const SIDEBAR_WIDTH = width * 0.8; // Slightly wider for better readability
+
+const STATIC_PARENT_MENU: SidebarMenuItem[] = [
+  {
+    id: 9991,
+    page_name: "Resources",
+    parent_id: 0,
+    href: "#",
+    main_menu_id: "resources-menu",
+    svg: "bx-folder",
+    sub_menu_id: null,
+    created_by: null,
+  },
+];
+
+const STATIC_CHILD_MENU: SidebarMenuItem[] = [
+  {
+    id: 100,
+    page_name: "Shared Drive",
+    parent_id: 9991,
+    href: "shared-drive",
+    main_menu_id: null,
+    svg: null,
+    sub_menu_id: null,
+    created_by: null,
+  },
+];
 
 interface SidebarProps {
   visible: boolean;
@@ -49,12 +75,23 @@ export default function Sidebar({
     });
   };
 
+  const finalParentMenu = useMemo(
+    () => [...parentMenu, ...STATIC_PARENT_MENU],
+    [parentMenu]
+  );
+
+  const finalChildMenu = useMemo(
+    () => [...childMenu, ...STATIC_CHILD_MENU],
+    [childMenu]
+  );
   // Group children by parent_id
-  const childrenByParent = childMenu.reduce((acc, child) => {
-    if (!acc[child.parent_id]) acc[child.parent_id] = [];
-    acc[child.parent_id].push(child);
-    return acc;
-  }, {} as Record<number, SidebarMenuItem[]>);
+  const childrenByParent = useMemo(() => {
+    return finalChildMenu.reduce((acc, child) => {
+      if (!acc[child.parent_id]) acc[child.parent_id] = [];
+      acc[child.parent_id].push(child);
+      return acc;
+    }, {} as Record<number, SidebarMenuItem[]>);
+  }, [finalChildMenu]);
 
   const getLucideIcon = (iconName?: string | null) => {
     if (!iconName) return null;
@@ -68,6 +105,9 @@ export default function Sidebar({
       "bxs-file-find": require("lucide-react-native").Search,
       "bx-phone-call": require("lucide-react-native").Phone,
       "bx-cog": require("lucide-react-native").Settings,
+
+      // ✅ STATIC PARENT ICON
+      "bx-folder": require("lucide-react-native").Folder,
     };
 
     const IconComponent = iconMap[iconName];
@@ -107,7 +147,7 @@ export default function Sidebar({
             />
           </View>
           <View style={styles.menuContainer}>
-            {parentMenu.map((parent) => {
+            {finalParentMenu.map((parent) => {
               const children = childrenByParent[parent.id] || [];
               const isExpanded = expandedIds.has(parent.id);
               const hasChildren = children.length > 0;
@@ -172,7 +212,7 @@ export default function Sidebar({
                               router.push("/(public)/lead-enquiry");
                             }
 
-                            if (child.id == 20) {
+                            if (child.id === 20) {
                               router.push("/(public)/add-today-task");
                             }
 
@@ -180,6 +220,13 @@ export default function Sidebar({
                               router.push("/(public)/my-task");
                             }
 
+                            if (child.id === 22) {
+                              router.push("/(public)/team-task");
+                            }
+
+                            if (child.id === 100) {
+                              router.push("/(public)/shared-drive");
+                            }
                             if (child.href) {
                               onMenuPress?.(child);
                               onClose();

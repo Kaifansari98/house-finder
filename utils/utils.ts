@@ -20,13 +20,27 @@ export const formatDate = (dateStr?: string) => {
   });
 };
 
+export const formatDateWithTime = (date: string | Date) => {
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+
+  if (isNaN(parsedDate.getTime())) {
+    return "-"; // fallback if invalid date
+  }
+
+  return parsedDate.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
+};
+
 export const getInitials = (value?: string | null): string => {
   if (!value) return "?";
 
-  const words = value
-    .trim()
-    .split(/\s+/)
-    .filter(Boolean);
+  const words = value.trim().split(/\s+/).filter(Boolean);
 
   if (words.length === 0) return "?";
 
@@ -36,8 +50,5 @@ export const getInitials = (value?: string | null): string => {
   }
 
   // Agar 2 ya zyada words → first 2 words ke first letters
-  return (
-    words[0].charAt(0).toUpperCase() +
-    words[1].charAt(0).toUpperCase()
-  );
+  return words[0].charAt(0).toUpperCase() + words[1].charAt(0).toUpperCase();
 };

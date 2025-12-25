@@ -5,7 +5,7 @@ export type SaveActivityRequest = {
   user_id: string; // encrypted
   activity_type: number; // activity_type_id
   activity_notes: string;
-  followup_date: string; // ISO datetime (YYYY-MM-DD HH:mm:ss)
+  followup_date?: string; // ISO datetime (YYYY-MM-DD HH:mm:ss)
 };
 
 export type SaveActivityResponse = {
