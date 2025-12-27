@@ -25,6 +25,11 @@ import {
   LeadActivityTypeResponse,
   loadLeadActivityTypes,
 } from "@/api/api";
+import {
+  getCampaignForReportAgent,
+  GetCampaignForReportAgentRequest,
+  GetCampaignForReportAgentResponse,
+} from "@/api/dashboard";
 
 export const useMastersData = () => {
   const categoryQuery = useQuery<CategoryResponse, Error>({
@@ -69,7 +74,7 @@ export const useMastersData = () => {
     queryFn: loadLeadSanity,
   });
 
-    const leadActivityTypeQuery = useQuery<LeadActivityTypeResponse, Error>({
+  const leadActivityTypeQuery = useQuery<LeadActivityTypeResponse, Error>({
     queryKey: ["masters", "lead-activity-types"],
     queryFn: loadLeadActivityTypes,
     staleTime: 10 * 60 * 1000,
@@ -86,7 +91,7 @@ export const useMastersData = () => {
     leadChannelQuery,
     leadCampaignQuery,
     leadSanityQuery,
-    leadActivityTypeQuery
+    leadActivityTypeQuery,
   };
 };
 
@@ -96,5 +101,17 @@ export const useLeadAgents = (userId?: number) => {
     queryFn: () => loadLeadAgents(userId as number),
     enabled: !!userId,
     staleTime: 5 * 60 * 1000,
+  });
+};
+
+export const useCampaignForReportAgent = (
+  payload?: GetCampaignForReportAgentRequest
+) => {
+  return useQuery<GetCampaignForReportAgentResponse, Error>({
+    queryKey: ["campaign-for-report-agent", payload?.user_id],
+    queryFn: () =>
+      getCampaignForReportAgent(payload as GetCampaignForReportAgentRequest),
+    enabled: !!payload?.user_id,
+    staleTime: 1000 * 60 * 5, // 5 min cache
   });
 };

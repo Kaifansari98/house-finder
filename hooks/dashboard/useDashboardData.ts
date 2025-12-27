@@ -1,4 +1,11 @@
-import { useQuery, type UseQueryOptions, type UseQueryResult, useMutation, type UseMutationOptions, type UseMutationResult  } from "@tanstack/react-query";
+import {
+  useQuery,
+  type UseQueryOptions,
+  type UseQueryResult,
+  useMutation,
+  type UseMutationOptions,
+  type UseMutationResult,
+} from "@tanstack/react-query";
 import {
   loadDashboard,
   type DashboardRequest,
@@ -7,10 +14,19 @@ import {
   type AcceptLeadRequest,
   type AcceptLeadResponse,
 } from "@/api/api";
+import {
+  getDashboardLeadStatus,
+  GetDashboardLeadStatusAgentRequest,
+  getDashboardLeadStatusByAgent,
+  GetDashboardLeadStatusRequest,
+} from "@/api/dashboard";
 
 export const useDashboardData = (
   payload: DashboardRequest | null,
-  options?: Omit<UseQueryOptions<DashboardResponse, Error>, "queryKey" | "queryFn">
+  options?: Omit<
+    UseQueryOptions<DashboardResponse, Error>,
+    "queryKey" | "queryFn"
+  >
 ): UseQueryResult<DashboardResponse, Error> => {
   return useQuery<DashboardResponse, Error>({
     queryKey: ["dashboard", payload?.user_id, payload?.role_id],
@@ -35,3 +51,44 @@ export const useAcceptLead = (
     ...options,
   });
 };
+
+export const useDashboardLeadStatus = (
+  payload?: GetDashboardLeadStatusRequest
+) => {
+  return useQuery({
+    queryKey: ["dashboard-lead-status", payload?.campaign_id ?? "all"],
+    queryFn: async () => {
+      const res = await getDashboardLeadStatus(payload ?? {});
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+};
+
+
+export const useDashboardLeadStatusByAgent = (
+  payload?: {
+    campaign_id?: string;
+    agent_id?: string;
+    agentCampaign_id? : string;
+  }
+) => {
+  return useQuery({
+    queryKey: [
+      "dashboard-lead-status-agent",
+      payload?.campaign_id ?? "all",
+      payload?.agent_id ?? "all",
+      payload?.agentCampaign_id
+    ],
+    queryFn: async () => {
+      const res = await getDashboardLeadStatusByAgent({
+        campaign_id: payload?.campaign_id,
+        agent_id: payload?.agent_id,
+      });
+      return res.data.lead_count;
+    },
+    enabled: true, // ✅ ALWAYS FETCH (default supported by backend)
+    staleTime: 1000 * 60 * 5,
+  });
+};
+

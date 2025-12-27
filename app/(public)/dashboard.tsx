@@ -10,7 +10,36 @@ import { useSidebarData } from "@/hooks/sidebar/useSidebarData";
 import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import StatsCards from "@/components/StatsCards";
 import Activity from "@/components/Activity";
+import { DashboardLeadCountItem } from "@/api/dashboard";
+import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
 
+export const DUMMY_DASHBOARD_LEAD_COUNT: DashboardLeadCountItem[] = [
+  {
+    lead_main_status_id: 1,
+    lead_main_status_name: "New Lead",
+    lead_count: 12,
+  },
+  {
+    lead_main_status_id: 2,
+    lead_main_status_name: "Contacting / Interested",
+    lead_count: 34,
+  },
+  {
+    lead_main_status_id: 7,
+    lead_main_status_name: "Followup / Retry",
+    lead_count: 8,
+  },
+  {
+    lead_main_status_id: 5,
+    lead_main_status_name: "Lost / Not Interested",
+    lead_count: 15,
+  },
+  {
+    lead_main_status_id: 6,
+    lead_main_status_name: "Disqualified / Invalid",
+    lead_count: 6,
+  },
+];
 export default function Dashboard() {
   const authData = useAuthStore(selectAuthData);
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -73,7 +102,10 @@ export default function Dashboard() {
   };
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+    <SafeAreaView
+      edges={["top", "left", "right", "bottom"]}
+      style={styles.safeArea}
+    >
       {/* Navbar */}
       <Navbar
         onMenuPress={() => setSidebarVisible(true)}
@@ -115,6 +147,10 @@ export default function Dashboard() {
 
         <View style={styles.ActivityContainer}>
           <Activity logs={dashboardData.data.lead_assignment_log} />
+        </View>
+
+        <View style={styles.statsCardsContainer}>
+          <LeadStatusCharts />
         </View>
 
         {/* User Profile Card */}

@@ -50,7 +50,7 @@ export const useFilterLeadApp = (
   });
 };
 
-type InfiniteLeadsPayload = Omit<FilterLeadAppRequest, "page_no" | "limit"> & {
+export type InfiniteLeadsPayload = Omit<FilterLeadAppRequest, "page_no" | "limit"> & {
   limit: string | number;
 };
 
