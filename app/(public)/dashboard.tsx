@@ -12,6 +12,7 @@ import StatsCards from "@/components/StatsCards";
 import Activity from "@/components/Activity";
 import { DashboardLeadCountItem } from "@/api/dashboard";
 import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
+import ViewAllEnquiry from "@/components/dashboard/ViewAllEnquiry";
 
 export const DUMMY_DASHBOARD_LEAD_COUNT: DashboardLeadCountItem[] = [
   {
@@ -151,6 +152,10 @@ export default function Dashboard() {
 
         <View style={styles.statsCardsContainer}>
           <LeadStatusCharts />
+        </View>
+
+        <View style={styles.statsCardsContainer}>
+          <ViewAllEnquiry />
         </View>
 
         {/* User Profile Card */}

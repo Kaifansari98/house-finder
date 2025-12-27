@@ -16,7 +16,6 @@ import {
 } from "@/api/api";
 import {
   getDashboardLeadStatus,
-  GetDashboardLeadStatusAgentRequest,
   getDashboardLeadStatusByAgent,
   GetDashboardLeadStatusRequest,
 } from "@/api/dashboard";
