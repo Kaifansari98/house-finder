@@ -224,6 +224,10 @@ export default function Sidebar({
                               router.push("/(public)/team-task");
                             }
 
+                            if (child.id === 24) {
+                              router.push("/(public)/add-new-enquiry");
+                            }
+
                             if (child.id === 100) {
                               router.push("/(public)/shared-drive");
                             }

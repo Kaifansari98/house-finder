@@ -10,13 +10,17 @@ import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
 import {
   CalendarFoldIcon,
+  ChevronUp,
+  ChevronDown,
   MapPin,
   StickyNote,
   User,
 } from "lucide-react-native";
+import { useRouter } from "expo-router";
 
 const ViewAllEnquiry = () => {
   const authData = useAuthStore(selectAuthData);
+  const router = useRouter();
   const { data: dashboardData } = useDashboardData(
     authData
       ? {
@@ -29,6 +33,8 @@ const ViewAllEnquiry = () => {
   const [expandedItems, setExpandedItems] = useState<Record<number, boolean>>(
     {}
   );
+
+  const [showEnquiry, setShowEnquiry] = useState(false);
 
   const enquiryData = dashboardData?.data.view_all_lead_enquiry || [];
 
@@ -74,7 +80,7 @@ const ViewAllEnquiry = () => {
     }
   };
 
-  // Check if description is long (more than ~50 characters for 1 line)
+  // Check if description is long
   const isDescriptionLong = (description: string) => {
     return description && description.length > 50;
   };
@@ -100,8 +106,6 @@ const ViewAllEnquiry = () => {
         </View>
 
         <View style={styles.cardContent}>
-          {/* Location & Enquired By in same row */}
-
           <View style={styles.fullWidthRow}>
             <MapPin size={15} color="#9ca3af" />
             <Text style={styles.labelText} numberOfLines={1}>
@@ -149,21 +153,90 @@ const ViewAllEnquiry = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Lead Enquiries</Text>
+
+        <TouchableOpacity
+          activeOpacity={0.7}
+          style={styles.viewBtn}
+          onPress={() => router.push("/(public)/lead-enquiry")}
+        >
+          <Text style={styles.btnText}>View All</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* List */}
-      <FlatList
-        data={enquiryData}
-        renderItem={renderCardView}
-        keyExtractor={(item) => item.id.toString()}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>No enquiries found</Text>
+      {/* Collapsed Preview - Shows when enquiry is hidden */}
+      {!showEnquiry && (
+        <View style={styles.previewContainer}>
+          {/* Stats Row */}
+          <View style={styles.statsRow}>
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>{enquiryData.length}</Text>
+              <Text style={styles.statLabel}>Total</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>
+                {enquiryData.filter((item) => item.rent_sell === "1").length}
+              </Text>
+              <Text style={styles.statLabel}>Rent</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>
+                {enquiryData.filter((item) => item.rent_sell === "2").length}
+              </Text>
+              <Text style={styles.statLabel}>Sell</Text>
+            </View>
+
+            <View style={styles.divider} />
+
+            <View style={styles.statItem}>
+              <Text style={styles.statNumber}>
+                {enquiryData.filter((item) => item.rent_sell === "3").length}
+              </Text>
+              <Text style={styles.statLabel}>Buy</Text>
+            </View>
           </View>
-        }
-      />
+
+          {/* Empty State */}
+          {enquiryData.length === 0 && (
+            <View style={styles.emptyPreview}>
+              <Text style={styles.emptyPreviewText}>No enquiries yet</Text>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Expanded List - Shows when enquiry is visible */}
+      {showEnquiry && (
+        <FlatList
+          data={enquiryData}
+          renderItem={renderCardView}
+          keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>No enquiries found</Text>
+            </View>
+          }
+        />
+      )}
+
+      {/* Toggle Button */}
+      <TouchableOpacity
+        style={styles.toggleContainer}
+        onPress={() => setShowEnquiry(!showEnquiry)}
+      >
+        {showEnquiry ? (
+          <ChevronUp size={25} color="#9ca3af" strokeWidth={3} />
+        ) : (
+          <ChevronDown size={25} color="#9ca3af" strokeWidth={3} />
+        )}
+      </TouchableOpacity>
     </View>
   );
 };
@@ -172,14 +245,15 @@ export default ViewAllEnquiry;
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: 12,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 10,
     gap: 10,
-    marginTop: 12,
+    marginBottom: 10,
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     gap: 12,
   },
   headerTitle: {
@@ -189,6 +263,105 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingBottom: 10,
+  },
+  viewBtn: {
+    backgroundColor: "#EFBF40",
+    paddingHorizontal: 15,
+    paddingVertical: 6,
+    borderRadius: 10,
+  },
+  btnText: {
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+  // ============ PREVIEW/COLLAPSED STYLES ============
+  previewContainer: {
+    gap: 12,
+  },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 12,
+  },
+  statItem: {
+    flex: 1,
+    alignItems: "center",
+    gap: 4,
+  },
+  statNumber: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  statLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  divider: {
+    width: 1,
+    height: 30,
+    backgroundColor: "#E5E7EB",
+  },
+  recentPreview: {
+    gap: 6,
+  },
+  recentLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#6b7280",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  recentCard: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: "#EFBF40",
+    gap: 6,
+  },
+  recentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  miniTypeBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  miniTypeBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: "#0f172a",
+  },
+  recentDate: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+  recentLocation: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#374151",
+  },
+  emptyPreview: {
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyPreviewText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#9ca3af",
   },
 
   // ============ CARD STYLES ============
@@ -247,12 +420,6 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     gap: 7,
-  },
-  infoRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 8,
   },
   fullWidthRow: {
     flexDirection: "row",
@@ -314,5 +481,11 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "600",
     color: "#64748b",
+  },
+
+  // ============ TOGGLE BUTTON ============
+  toggleContainer: {
+    alignItems: "center",
+    paddingTop: 5,
   },
 });

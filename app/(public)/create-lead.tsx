@@ -13,7 +13,10 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import ScreenNavbar from "@/components/ScreenNavbar";
 import Toast from "@/components/Toast";
-import { useMastersData } from "@/hooks/sidebar/masters/useMastersData";
+import {
+  useLeadAgents,
+  useMastersData,
+} from "@/hooks/sidebar/masters/useMastersData";
 import { useLeadsApi } from "@/hooks/sidebar/useLeadsApi";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
 import { Picker } from "@react-native-picker/picker";
@@ -131,6 +134,8 @@ const SelectField = ({
 
 export default function CreateLead() {
   const authData = useAuthStore(selectAuthData);
+  const userId = authData?.user.user_id;
+
   const { mutate: saveLead, isPending } = useLeadsApi({
     onSuccess: () => showToast("success", "Lead saved successfully"),
     onError: () => showToast("error", "Failed to save lead"),
@@ -149,6 +154,8 @@ export default function CreateLead() {
     // leadAgentsQuery,
     leadSanityQuery,
   } = useMastersData();
+
+  const { data: agentsData, isLoading: agentsLoading } = useLeadAgents(userId);
 
   const [toast, setToast] = useState<{
     visible: boolean;
@@ -282,15 +289,15 @@ export default function CreateLead() {
     [leadCampaignQuery.data]
   );
 
-  // const leadAgents = useMemo(
-  //   () =>
-  //     mapOptions(
-  //       leadAgentsQuery.data?.data.lead_agents,
-  //       "display_name",
-  //       "user_id"
-  //     ),
-  //   [leadAgentsQuery.data]
-  // );
+  const leadAgents = useMemo(
+    () =>
+      mapOptions(
+        agentsData?.data?.lead_agents,
+        "display_name",
+        "user_id"
+      ),
+    [agentsData?.data]
+  );
 
   const leadSanities = useMemo(
     () => mapOptions(leadSanityQuery.data?.data.lead_sanity, "name", "id"),
@@ -466,13 +473,13 @@ export default function CreateLead() {
           onChange={(v) => setForm((p) => ({ ...p, lead_campaign: v }))}
           loading={leadCampaignQuery.isLoading}
         />
-        {/* <SelectField
+        <SelectField
           label="Agent"
           options={leadAgents}
           value={form.lead_agent}
           onChange={(v) => setForm((p) => ({ ...p, lead_agent: v }))}
-          loading={leadAgentsQuery.isLoading}
-        /> */}
+          loading={agentsLoading}
+        />
         <SelectField
           label="Lead Sanity"
           options={leadSanities}

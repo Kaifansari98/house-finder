@@ -3,7 +3,7 @@ import { apiClient } from "@/utils/apiClient";
 export type LeadEnquiryItem = {
   id: number;
   lead_id: number;
-  rent_sell: string;        // "1" | "2"
+  rent_sell: string; // "1" | "2"
   location: string;
   budget: string;
   payment_type: string;
@@ -30,17 +30,33 @@ export type ViewAllLeadEnquiryResponse = {
   };
 };
 
-
-
-
-
-
-export const getAllLeadEnquiries = (
-  payload: ViewAllLeadEnquiryRequest
-) =>
+export const getAllLeadEnquiries = (payload: ViewAllLeadEnquiryRequest) =>
   apiClient<ViewAllLeadEnquiryResponse>("app-view-all-lead-enquiry", {
     method: "GET",
     query: {
       user_id: payload.user_id,
     },
+  });
+
+export type SaveLeadEnquiryRequest = {
+  user_id: string; // encrypted user id
+  lead_enquiry_id?: string; // edit (optional)
+  lead_id?: string; // "0" ya actual lead id
+  rentsell: string; // 1 = rent, 2 = sell
+  location: string;
+  budget: string;
+  payment_type: string;
+  description: string;
+};
+
+export type SaveLeadEnquiryResponse = {
+  message: string;
+  status: number;
+  data: null;
+};
+
+export const saveLeadEnquiry = (payload: SaveLeadEnquiryRequest) =>
+  apiClient<SaveLeadEnquiryResponse>("app-save-lead-enquiry", {
+    method: "POST",
+    body: payload,
   });

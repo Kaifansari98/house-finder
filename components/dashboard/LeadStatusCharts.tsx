@@ -206,11 +206,12 @@ export default LeadStatusCharts;
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 10,
     padding: 16,
     borderWidth: 1,
     borderColor: "#E5E7EB",
     gap: 10,
+    marginBottom: 10,
   },
   title: {
     fontSize: 16,

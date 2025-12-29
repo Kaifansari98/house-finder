@@ -126,6 +126,33 @@ export type DashboardLeadEnquiry = {
   created_by_name: string;
 };
 
+export type EventItem = {
+  event_id: number;
+  event_title: string;
+  event_desc: string;
+  event_date: string; // YYYY-MM-DD
+  event_time: string; // HH:mm:ss
+  event_location: string;
+  invited_agents: string; // backend sends as string ("1")
+  invited_agent_names: string;
+  created_by: number;
+  created_at: string; // YYYY-MM-DD HH:mm:ss
+  updated_by: number | null;
+  updated_at: string | null;
+  deleted_by: number | null;
+  deleted_at: string | null;
+  active: "yes" | "no";
+};
+
+export type AgentLeadCountItem = {
+  lead_count: number;
+  agent_fullname: string | null;
+};
+
+export type CallCenterRawLeadCountItem = {
+  lead_count: number;
+  agent_fullname: string | null;
+};
 export type DashboardResponse = {
   message: string;
   status: number;
@@ -141,6 +168,9 @@ export type DashboardResponse = {
     lead_status: DashboardLeadStatus[];
     role_master_id: number;
     view_all_lead_enquiry: DashboardLeadEnquiry[];
+    events: EventItem[];
+    all_lead_count: AgentLeadCountItem[];
+    call_center_raw_data_count: CallCenterRawLeadCountItem[];
   };
 };
 

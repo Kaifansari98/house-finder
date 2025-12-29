@@ -116,7 +116,7 @@ const LeadItem = React.memo<LeadItemProps>(({ item, admin, onPress }) => {
       {/* Phone & Sub Status */}
       <View style={styles.seconderow}>
         <View style={styles.phoneContainer}>
-          <PhoneCall size={18} color="#EFBF04" />
+          <PhoneCall size={15} color="#9ca3af" />
           <Text style={styles.phone} numberOfLines={1}>
             {phone}
           </Text>
@@ -149,10 +149,8 @@ const LeadItem = React.memo<LeadItemProps>(({ item, admin, onPress }) => {
       {admin && item.enquiry_date && (
         <View style={styles.fourrow}>
           <View style={styles.dateContainer}>
-            <Calendar size={18} color="#EFBF04" />
-            <Text style={styles.dateText}>
-              {formatDate(item.enquiry_date)}
-            </Text>
+            <Calendar size={15} color="#9ca3af" />
+            <Text style={styles.dateText}>{formatDate(item.enquiry_date)}</Text>
           </View>
         </View>
       )}
@@ -230,7 +228,8 @@ export default function ViewAllLeads() {
   );
 
   const [draftFilters, setDraftFilters] = useState<LeadFilters>(initialFilters);
-  const [appliedFilters, setAppliedFilters] = useState<LeadFilters>(initialFilters);
+  const [appliedFilters, setAppliedFilters] =
+    useState<LeadFilters>(initialFilters);
   const [menuOpen, setMenuOpen] = useState(false);
 
   // Redirect to login if not authenticated
@@ -245,7 +244,12 @@ export default function ViewAllLeads() {
       setDraftFilters(initialFilters);
       setAppliedFilters(initialFilters);
     }
-  }, [initialFilters, params.lead_main_status_id, params.campaign_id, params.agent_id]);
+  }, [
+    initialFilters,
+    params.lead_main_status_id,
+    params.campaign_id,
+    params.agent_id,
+  ]);
 
   // Build API payload
   const payload = useMemo(() => {
@@ -366,7 +370,9 @@ export default function ViewAllLeads() {
       {query.isLoading ? (
         <LoadingState message="Loading leads..." />
       ) : query.isError ? (
-        <LoadingState message={query.error?.message ?? "Something went wrong"} />
+        <LoadingState
+          message={query.error?.message ?? "Something went wrong"}
+        />
       ) : isEmpty ? (
         <EmptyState onClearFilters={handleClearFilters} />
       ) : (
@@ -410,13 +416,12 @@ const styles = StyleSheet.create({
   },
   container: {
     borderWidth: 1,
-    borderColor: "#e5e7eb",
-    gap: 12,
+    borderColor: "#E5E7EB",
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 10,
+    padding: 10,
     marginBottom: 10,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
+    gap: 7,
   },
   left: {
     flexDirection: "row",
@@ -424,36 +429,34 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#D3D3D3",
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#EFBF04",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: {
-    color: "#0f172a",
     fontWeight: "800",
-    fontSize: 18,
+    fontSize: 16,
+    color: "#0f172a",
   },
   textBlock: {
     flex: 1,
   },
   name: {
-    color: "#0f172a",
+    fontSize: 16,
     fontWeight: "800",
-    fontSize: 18,
-    textTransform: "capitalize",
+    color: "#0f172a",
   },
   pfix: {
-    color: "#808080",
-    fontWeight: "700",
-    fontSize: 14,
+    color: "#6b7280",
+    fontSize: 13,
+    fontWeight: "600",
   },
   phone: {
-    marginTop: 2,
+    fontSize: 14,
     fontWeight: "600",
-    fontSize: 16,
     color: "#0f172a",
   },
   phoneContainer: {
@@ -469,9 +472,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   loadingText: {
-    color: "#6b7280",
+    fontSize: 14,
     fontWeight: "600",
-    fontSize: 13,
+    color: "#0f172a",
   },
   footer: {
     paddingVertical: 14,
@@ -488,9 +491,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   statusText: {
-    color: "#0f172a",
+    fontSize: 14,
     fontWeight: "600",
-    fontSize: 16,
+    color: "#0f172a",
   },
   statusSubContainer: {
     flexDirection: "row",
@@ -521,7 +524,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dateText: {
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#0f172a",
   },
   emptyContainer: {
     flex: 1,

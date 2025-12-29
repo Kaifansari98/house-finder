@@ -19,11 +19,12 @@ import {
 } from "lucide-react-native";
 
 import { useAuthStore, selectAuthData } from "@/stores/auth-store";
-import EditEnquiryModal from "@/modals/enquiry/EditEnquiryModal";
 import { useAllLeadEnquiries } from "@/hooks/enquiry/useEnquiry";
 import { LeadEnquiryItem } from "@/api/enquiryapi";
 import { getInitials } from "@/utils/utils";
-
+import AddGeneralEnquiryModal, {
+  EnquiryData,
+} from "@/modals/enquiry/AddAndEditEnquiryModal";
 
 /* ---------------- STATUS DOT ---------------- */
 const StatusDot = ({ color = "green", size = 8 }) => (
@@ -42,7 +43,7 @@ const LeadEnquiry = () => {
   const authData = useAuthStore(selectAuthData);
   const userId = authData?.encrypted_user_id;
 
-  const { data, isLoading, isError } = useAllLeadEnquiries(
+  const { data, isLoading, isError, refetch } = useAllLeadEnquiries(
     userId ? { user_id: userId } : undefined
   );
 
@@ -52,10 +53,32 @@ const LeadEnquiry = () => {
     useState<LeadEnquiryItem | null>(null);
 
   /* ---------------- HELPERS ---------------- */
-  const getRentSell = (val: string) => (val === "1" ? "rent" : "sell");
+  type RentSellType = "rent" | "sell" | "buyer";
 
-  const getRentSellColor = (type: string) =>
-    type === "rent" ? "#3b82f6" : "#22c55e";
+  /* ================= LABEL MAP ================= */
+
+  const RENT_SELL_LABEL_MAP: Record<string, RentSellType> = {
+    "1": "rent",
+    "2": "sell",
+    "3": "buyer",
+  };
+
+  /* ================= COLOR MAP ================= */
+
+  const RENT_SELL_COLOR_MAP: Record<RentSellType, string> = {
+    rent: "#3b82f6", // blue
+    sell: "#22c55e", // green
+    buyer: "#f97316", // orange
+  };
+
+  /* ================= HELPERS ================= */
+  const getRentSell = (val?: string | number): RentSellType => {
+    return RENT_SELL_LABEL_MAP[String(val)] ?? "buyer";
+  };
+
+  const getRentSellColor = (type?: RentSellType): string => {
+    return (type && RENT_SELL_COLOR_MAP[type]) || "#9ca3af"; // fallback gray
+  };
 
   const formatBudget = (budget: string) => {
     const num = Number(budget);
@@ -67,6 +90,7 @@ const LeadEnquiry = () => {
     return num.toString();
   };
 
+  /* ---------------- HANDLERS ---------------- */
   const handleEdit = (item: LeadEnquiryItem) => {
     setSelectedEnquiry(item);
     setOpenMenuId(null);
@@ -75,7 +99,15 @@ const LeadEnquiry = () => {
 
   const handleDelete = (id: number) => {
     console.log("Delete enquiry:", id);
+    // TODO: Implement delete functionality
     setOpenMenuId(null);
+  };
+
+  const handleModalClose = () => {
+    setOpenEditModal(false);
+    setSelectedEnquiry(null);
+    // Refetch data to get updated list
+    refetch();
   };
 
   /* ---------------- RENDER ITEM ---------------- */
@@ -84,6 +116,7 @@ const LeadEnquiry = () => {
     const name = item.fullname;
     const avatarText = name ? getInitials(name) : "NA";
     const rentSell = getRentSell(item.rent_sell);
+    const rentSellLabel = getRentSell(item.rent_sell);
 
     return (
       <View style={styles.itemContainer}>
@@ -100,12 +133,9 @@ const LeadEnquiry = () => {
               </Text>
 
               <View style={styles.rentSellRow}>
-                <StatusDot
-                  color={getRentSellColor(rentSell)}
-                  size={8}
-                />
+                <StatusDot color={getRentSellColor(rentSell)} size={8} />
                 <Text style={styles.rentSellText}>
-                  {rentSell === "rent" ? "Rent" : "Sell"}
+                  {rentSellLabel.toUpperCase()} 
                 </Text>
               </View>
             </View>
@@ -114,9 +144,7 @@ const LeadEnquiry = () => {
           {/* MENU BUTTON */}
           <TouchableOpacity
             style={styles.actionButton}
-            onPress={() =>
-              setOpenMenuId(isMenuOpen ? null : item.id)
-            }
+            onPress={() => setOpenMenuId(isMenuOpen ? null : item.id)}
           >
             <MoreVertical size={18} color="#9ca3af" />
           </TouchableOpacity>
@@ -175,6 +203,20 @@ const LeadEnquiry = () => {
     );
   };
 
+  /* ---------------- PREPARE ENQUIRY DATA FOR MODAL ---------------- */
+  const getEnquiryDataForModal = (): EnquiryData | undefined => {
+    if (!selectedEnquiry) return undefined;
+
+    return {
+      lead_enquiry_id: selectedEnquiry.id.toString(),
+      rentsell: selectedEnquiry.rent_sell,
+      location: selectedEnquiry.location,
+      budget: selectedEnquiry.budget,
+      payment_type: selectedEnquiry.payment_type,
+      description: selectedEnquiry.description || "",
+    };
+  };
+
   /* ---------------- UI ---------------- */
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -182,12 +224,12 @@ const LeadEnquiry = () => {
 
       {isLoading ? (
         <View style={styles.center}>
-          <ActivityIndicator />
-          <Text>Loading enquiries...</Text>
+          <ActivityIndicator size="large" color="#EFBF04" />
+          <Text style={styles.loadingText}>Loading enquiries...</Text>
         </View>
       ) : isError ? (
         <View style={styles.center}>
-          <Text>Something went wrong</Text>
+          <Text style={styles.errorText}>Something went wrong</Text>
         </View>
       ) : (
         <FlatList
@@ -196,13 +238,19 @@ const LeadEnquiry = () => {
           keyExtractor={(item) => item.id.toString()}
           contentContainerStyle={styles.listContainer}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No enquiries found</Text>
+            </View>
+          }
         />
       )}
 
-      <EditEnquiryModal
-        item={selectedEnquiry}
+      {/* ================= EDIT MODAL ================= */}
+      <AddGeneralEnquiryModal
         visible={openEditModal}
-        onClose={() => setOpenEditModal(false)}
+        onClose={handleModalClose}
+        enquiryData={getEnquiryDataForModal()}
       />
     </SafeAreaView>
   );
@@ -220,6 +268,31 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+  },
+
+  loadingText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#6b7280",
+  },
+
+  errorText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#ef4444",
+  },
+
+  emptyContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 60,
+  },
+
+  emptyText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#9ca3af",
   },
 
   itemContainer: {
@@ -301,6 +374,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#E5E7EB",
     minWidth: 120,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
     elevation: 5,
     zIndex: 1000,
   },

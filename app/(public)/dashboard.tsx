@@ -1,6 +1,6 @@
 // screens/Dashboard.tsx
 import React, { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View, FlatList } from "react-native";
 import { useAuthStore, selectAuthData } from "@/stores/auth-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -13,6 +13,7 @@ import Activity from "@/components/Activity";
 import { DashboardLeadCountItem } from "@/api/dashboard";
 import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
 import ViewAllEnquiry from "@/components/dashboard/ViewAllEnquiry";
+import LeadCountTable from "@/components/dashboard/LeadCountTable";
 
 export const DUMMY_DASHBOARD_LEAD_COUNT: DashboardLeadCountItem[] = [
   {
@@ -125,41 +126,50 @@ export default function Dashboard() {
       />
 
       {/* Main Content */}
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
+
+      <FlatList
+        data={[{ id: "dashboard-root" }]} // dummy single item
+        keyExtractor={(item) => item.id}
         showsVerticalScrollIndicator={false}
-      >
-        {/* Page Title */}
-        <View style={styles.pageHeader}>
-          <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
-          <Text style={styles.pageSubtitle}>
-            Welcome back, {user.fullname.split(" ")[0]}.
-          </Text>
-        </View>
+        contentContainerStyle={styles.scrollContent}
+        renderItem={() => null}
+        ListHeaderComponent={
+          <>
+            {/* Page Title */}
+            <View style={styles.pageHeader}>
+              <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
+              <Text style={styles.pageSubtitle}>
+                Welcome back, {user.fullname.split(" ")[0]}.
+              </Text>
+            </View>
 
-        <View style={styles.statsCardsContainer}>
-          <StatsCards
-            totalLeads={dashboardData.data.total_leads}
-            missedFollowup={dashboardData.data.missed_followup}
-            todayFollowup={dashboardData.data.today_followup}
-            futureFollowup={dashboardData.data.future_followup}
-          />
-        </View>
+            <View style={styles.statsCardsContainer}>
+              <StatsCards
+                totalLeads={dashboardData.data.total_leads}
+                missedFollowup={dashboardData.data.missed_followup}
+                todayFollowup={dashboardData.data.today_followup}
+                futureFollowup={dashboardData.data.future_followup}
+              />
+            </View>
 
-        <View style={styles.ActivityContainer}>
-          <Activity logs={dashboardData.data.lead_assignment_log} />
-        </View>
+            <View style={styles.ActivityContainer}>
+              <Activity logs={dashboardData.data.lead_assignment_log} />
+            </View>
 
-        <View style={styles.statsCardsContainer}>
-          <LeadStatusCharts />
-        </View>
+            {/* <View style={styles.statsCardsContainer}>
+              <LeadStatusCharts />
+            </View> */}
 
-        <View style={styles.statsCardsContainer}>
-          <ViewAllEnquiry />
-        </View>
+            <View style={styles.statsCardsContainer}>
+              <ViewAllEnquiry />
+            </View>
 
-        {/* User Profile Card */}
-        {/* <View style={styles.card}>
+            <View style={styles.statsCardsContainer}>
+              <LeadCountTable />
+            </View>
+
+            {/* User Profile Card */}
+            {/* <View style={styles.card}>
           <Text style={styles.cardTitle}>User Profile</Text>
           <View style={styles.cardContent}>
             {[
@@ -186,8 +196,8 @@ export default function Dashboard() {
           </View>
         </View> */}
 
-        {/* Role Information Card */}
-        {/* <View style={styles.card}>
+            {/* Role Information Card */}
+            {/* <View style={styles.card}>
           <Text style={styles.cardTitle}>Role Information</Text>
           <View style={styles.cardContent}>
             <View style={styles.infoRow}>
@@ -200,7 +210,9 @@ export default function Dashboard() {
             </View>
           </View>
         </View> */}
-      </ScrollView>
+          </>
+        }
+      />
     </SafeAreaView>
   );
 }
