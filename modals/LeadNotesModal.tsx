@@ -19,6 +19,7 @@ import {
   useSaveLeadNote,
 } from "@/hooks/leadAction/useLeadAction";
 import Toast from "@/components/Toast";
+import { triggerLocalLeadNoteNotification } from "@/lib/notifications/notifications";
 
 /* ================= TYPES ================= */
 
@@ -101,8 +102,10 @@ export default function LeadNotesModal({ visible, onClose, leadId }: Props) {
         notes_comments: result.data.notes_comments,
       },
       {
-        onSuccess: () => {
+        onSuccess: async () => {
           setNotes("");
+
+          await triggerLocalLeadNoteNotification(leadId);
           setToast({
             visible: true,
             type: "success",

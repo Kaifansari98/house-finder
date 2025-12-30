@@ -2,14 +2,21 @@ import { Stack } from "expo-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
+import NotificationBootstrap from "@/components/notifications/NotificationBootstrap";
+
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
-  
   return (
     <GestureHandlerRootView>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: "#fff" }, }}>
+        <NotificationBootstrap /> {/* 👈 yahin */}
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: "#fff" },
+          }}
+        >
           <Stack.Screen name="(auth)" />
           <Stack.Screen name="(public)" />
         </Stack>

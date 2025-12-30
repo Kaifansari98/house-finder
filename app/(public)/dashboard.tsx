@@ -14,6 +14,7 @@ import { DashboardLeadCountItem } from "@/api/dashboard";
 import ViewAllEnquiry from "@/components/dashboard/ViewAllEnquiry";
 import LeadCountTable from "@/components/dashboard/LeadCountTable";
 import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
+import { useFcmStore } from "@/stores/fcm-store";
 
 export const DUMMY_DASHBOARD_LEAD_COUNT: DashboardLeadCountItem[] = [
   {
@@ -46,6 +47,7 @@ export default function Dashboard() {
   const authData = useAuthStore(selectAuthData);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [sidebarVisible, setSidebarVisible] = useState(false);
+  const { clearToken } = useFcmStore();
 
   const { data: sidebarData } = useSidebarData(
     authData
@@ -99,7 +101,13 @@ export default function Dashboard() {
   };
 
   const handleLogout = () => {
+    // 1️⃣ Clear auth state
     clearAuth();
+
+    // 2️⃣ Clear FCM token (device-level)
+    useFcmStore.getState().clearToken();
+
+    // 3️⃣ Redirect
     router.replace("/(auth)/login");
   };
 
