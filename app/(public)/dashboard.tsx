@@ -11,9 +11,9 @@ import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
 import StatsCards from "@/components/StatsCards";
 import Activity from "@/components/Activity";
 import { DashboardLeadCountItem } from "@/api/dashboard";
-import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
 import ViewAllEnquiry from "@/components/dashboard/ViewAllEnquiry";
 import LeadCountTable from "@/components/dashboard/LeadCountTable";
+import LeadStatusCharts from "@/components/dashboard/LeadStatusCharts";
 
 export const DUMMY_DASHBOARD_LEAD_COUNT: DashboardLeadCountItem[] = [
   {
@@ -156,9 +156,9 @@ export default function Dashboard() {
               <Activity logs={dashboardData.data.lead_assignment_log} />
             </View>
 
-            {/* <View style={styles.statsCardsContainer}>
+            <View style={styles.statsCardsContainer}>
               <LeadStatusCharts />
-            </View> */}
+            </View>
 
             <View style={styles.statsCardsContainer}>
               <ViewAllEnquiry />

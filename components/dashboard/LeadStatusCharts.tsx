@@ -22,8 +22,6 @@ const LeadStatusCharts = () => {
   const role_id = authData?.role.role_master_id;
 
   const isAdmin = role_id === 1;
-  console.log("role id: ", role_id);
-  console.log("userId: ", userId);
 
   const [selectedCampaign, setSelectedCampaign] = useState<{
     label: string;

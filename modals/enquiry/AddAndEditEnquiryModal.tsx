@@ -236,12 +236,6 @@ const AddGeneralEnquiryModal = ({
             {/* ================= BODY ================= */}
             <ScrollView>
               <View style={styles.content}>
-                {isEditMode && enquiryData?.lead_enquiry_id && (
-                  <Text style={styles.subTitle}>
-                    Enquiry ID: {enquiryData.lead_enquiry_id}
-                  </Text>
-                )}
-
                 {/* Rent / Sell / Buyer */}
                 <SelectField
                   label="Rent / Sell / Buyer"
@@ -461,7 +455,7 @@ const styles = StyleSheet.create({
 
   inputFocused: {
     borderColor: "#EFBF04",
-    borderWidth: 2,
+    borderWidth: 1.5,
   },
 
   inputError: {

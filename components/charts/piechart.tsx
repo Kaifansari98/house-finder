@@ -1,4 +1,10 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import {
   StyleSheet,
   Text,
@@ -33,29 +39,34 @@ interface LeadStatusData {
   statusId: number;
 }
 
-interface PieSliceProps {
-  color: string;
+interface SliceData extends LeadStatusData {
   startAngle: number;
   endAngle: number;
+  midAngle: number;
+  percentage: number;
+  pathData: string;
+  labelX: number;
+  labelY: number;
+}
+
+interface PieSliceProps {
+  slice: SliceData;
   animatedValue: SharedValue<number>;
   onPress: () => void;
   isHovered: boolean;
-  midAngle: number;
-  value: number;
-  percentage: number;
 }
 
 interface TooltipData {
   label: string;
   value: number;
   color: string;
-  angle: number;
+  x: number;
+  y: number;
 }
 
 interface LegendItemProps {
   item: LeadStatusData;
   index: number;
-  progress: SharedValue<number>;
   isHovered: boolean;
   onPress: () => void;
 }
@@ -65,6 +76,26 @@ interface LeadsPieChartProps {
   onStatusPress?: (statusId: number, statusName: string) => void;
   loading?: boolean;
 }
+
+/* ===================== CONSTANTS ===================== */
+
+const RADIUS = 110;
+const CX = 120;
+const CY = 120;
+const LABEL_RADIUS = 70;
+const TOOLTIP_DISTANCE = 85;
+const DOUBLE_CLICK_DELAY = 300;
+const TOOLTIP_DURATION = 3500;
+
+const SUB_STATUS_COLOR_MAP: Record<string, string> = {
+  newlead: "#0000FF",
+  contactinginterested: "#FFFF00",
+  qualifiedready: "#32CD32",
+  wonconverted: "#008000",
+  lostnotinterested: "#FFA500",
+  disqualifiedinvalid: "#FF0000",
+  followupretry: "#800080",
+};
 
 /* ===================== HELPERS ===================== */
 
@@ -78,175 +109,240 @@ const formatNumber = (num: number): string => {
   return num.toString();
 };
 
-// Color mapping based on status names
+const normalizeStatus = (status?: string | null) =>
+  (status ?? "unknown").toLowerCase().replace(/\s+/g, "").replace(/\//g, "");
+
 const getColorForStatus = (statusName?: string | null): string => {
-  const normalizedName = (statusName ?? "unknown")
-    .toLowerCase()
-    .replace(/\s+/g, "");
+  const key = normalizeStatus(statusName);
+  return SUB_STATUS_COLOR_MAP[key] ?? "#6B7280";
+};
 
-  const colorMap: Record<string, string> = {
-    newlead: "#3B82F6",
-    "contacting/interested": "#F59E0B",
-    contactinginterested: "#F59E0B",
-    "qualified/ready": "#10B981",
-    qualifiedready: "#10B981",
-    "won/converted": "#059669",
-    wonconverted: "#059669",
-    "lost/notinterested": "#EF4444",
-    lostnotinterested: "#EF4444",
-    "disqualified/invalid": "#DC2626",
-    disqualifiedinvalid: "#DC2626",
-    "followup/retry": "#8B5CF6",
-    followupretry: "#8B5CF6",
-    unknown: "#6B7280",
+// Pre-calculate SVG path data
+const createPathData = (
+  startAngle: number,
+  endAngle: number,
+  radius: number = RADIUS
+): string => {
+  const isSingleSlice = endAngle - startAngle >= 359.9;
+
+  if (isSingleSlice) {
+    // Full circle path for single slice
+    const startRad = (startAngle - 90) * (Math.PI / 180);
+    const midRad = (startAngle + 180 - 90) * (Math.PI / 180);
+
+    const x1 = CX + radius * Math.cos(startRad);
+    const y1 = CY + radius * Math.sin(startRad);
+    const x2 = CX + radius * Math.cos(midRad);
+    const y2 = CY + radius * Math.sin(midRad);
+
+    return `M ${CX} ${CY}
+      L ${x1} ${y1}
+      A ${radius} ${radius} 0 1 1 ${x2} ${y2}
+      A ${radius} ${radius} 0 1 1 ${x1} ${y1}
+      Z`;
+  }
+
+  const startRad = (startAngle - 90) * (Math.PI / 180);
+  const endRad = (endAngle - 90) * (Math.PI / 180);
+
+  const x1 = CX + radius * Math.cos(startRad);
+  const y1 = CY + radius * Math.sin(startRad);
+  const x2 = CX + radius * Math.cos(endRad);
+  const y2 = CY + radius * Math.sin(endRad);
+
+  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
+
+  return `M ${CX} ${CY}
+    L ${x1} ${y1}
+    A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
+    Z`;
+};
+
+// Calculate label position
+const getLabelPosition = (midAngle: number) => {
+  const angleRad = (midAngle - 90) * (Math.PI / 180);
+  return {
+    x: CX + LABEL_RADIUS * Math.cos(angleRad),
+    y: CY + LABEL_RADIUS * Math.sin(angleRad),
   };
+};
 
-  return colorMap[normalizedName] ?? colorMap.unknown;
+// Calculate tooltip position
+const getTooltipPosition = (midAngle: number) => {
+  const angleRad = (midAngle - 90) * (Math.PI / 180);
+  return {
+    x: TOOLTIP_DISTANCE * Math.cos(angleRad),
+    y: TOOLTIP_DISTANCE * Math.sin(angleRad),
+  };
 };
 
 /* ===================== PIE SLICE ===================== */
 
-const PieSlice: React.FC<PieSliceProps> = ({
-  color,
-  startAngle,
-  endAngle,
-  animatedValue,
-  onPress,
-  isHovered,
-  midAngle,
-  value,
-  percentage,
-}) => {
-  const radius = isHovered ? 113 : 110;
-  const cx = 120;
-  const cy = 120;
+const PieSlice = React.memo<PieSliceProps>(
+  ({ slice, animatedValue, onPress, isHovered }) => {
+    const {
+      color,
+      startAngle,
+      endAngle,
+      pathData,
+      labelX,
+      labelY,
+      value,
+      percentage,
+    } = slice;
 
-  const animatedProps = useAnimatedProps(() => {
-    "worklet";
+    const animatedProps = useAnimatedProps(() => {
+      "worklet";
 
-    const isSingleSlice = endAngle - startAngle >= 359.9;
+      const isSingleSlice = endAngle - startAngle >= 359.9;
 
-    const end = isSingleSlice
-      ? endAngle
-      : interpolate(animatedValue.value, [0, 1], [startAngle, endAngle]);
+      if (isSingleSlice) {
+        // For single slice, show full path immediately
+        return {
+          d: pathData,
+          opacity: interpolate(animatedValue.value, [0, 0.3, 1], [0, 1, 1]),
+        };
+      }
 
-    if (end < startAngle + 0.01) {
-      return { d: "" };
-    }
+      // Animate path drawing for multiple slices
+      const end = interpolate(
+        animatedValue.value,
+        [0, 1],
+        [startAngle, endAngle]
+      );
 
-    const startRad = (startAngle - 90) * (Math.PI / 180);
-    const endRad = (end - 90) * (Math.PI / 180);
+      if (end < startAngle + 0.01) {
+        return { d: "", opacity: 0 };
+      }
 
-    const x1 = cx + radius * Math.cos(startRad);
-    const y1 = cy + radius * Math.sin(startRad);
-    const x2 = cx + radius * Math.cos(endRad);
-    const y2 = cy + radius * Math.sin(endRad);
+      const startRad = (startAngle - 90) * (Math.PI / 180);
+      const endRad = (end - 90) * (Math.PI / 180);
 
-    const largeArc = end - startAngle > 180 ? 1 : 0;
+      const x1 = CX + RADIUS * Math.cos(startRad);
+      const y1 = CY + RADIUS * Math.sin(startRad);
+      const x2 = CX + RADIUS * Math.cos(endRad);
+      const y2 = CY + RADIUS * Math.sin(endRad);
 
-    return {
-      d: `M ${cx} ${cy}
-        L ${x1} ${y1}
-        A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2}
-        Z`,
-    };
-  });
+      const largeArc = end - startAngle > 180 ? 1 : 0;
 
-  // Show label for smaller percentages (reduced threshold)
-  const showLabel = percentage > 3;
+      return {
+        d: `M ${CX} ${CY} L ${x1} ${y1} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${x2} ${y2} Z`,
+        opacity: 1,
+      };
+    });
 
-  const labelRadius = 70;
-  const angleRad = (midAngle - 90) * (Math.PI / 180);
-  const labelX = cx + labelRadius * Math.cos(angleRad);
-  const labelY = cy + labelRadius * Math.sin(angleRad);
+    const showLabel = percentage > 3;
 
-  const textAnimatedProps = useAnimatedProps(() => {
-    "worklet";
-    return {
-      opacity: interpolate(animatedValue.value, [0, 0.5, 1], [0, 0, 1]),
-    };
-  });
+    const textAnimatedProps = useAnimatedProps(() => {
+      "worklet";
+      return {
+        opacity: interpolate(animatedValue.value, [0, 0.5, 1], [0, 0, 1]),
+      };
+    });
 
-  const isSingleSlice = endAngle - startAngle >= 359;
+    const isSingleSlice = endAngle - startAngle >= 359;
 
-  return (
-    <G onPress={onPress}>
-      <AnimatedPath
-        animatedProps={animatedProps}
-        fill={color}
-        stroke={isSingleSlice ? "none" : "#fff"}
-        strokeWidth={1}
-      />
-      {showLabel && (
-        <AnimatedSvgText
-          x={labelX}
-          y={labelY}
-          fontSize="12"
-          fontWeight="700"
-          fill="#FFFFFF"
-          textAnchor="middle"
-          alignmentBaseline="middle"
-          animatedProps={textAnimatedProps}
-        >
-          {formatNumber(value)}
-        </AnimatedSvgText>
-      )}
-    </G>
-  );
-};
+    // Hover effect using opacity only (no geometry changes)
+    const hoverStyle = isHovered ? { opacity: 0.85 } : { opacity: 1 };
+
+    return (
+      <G onPress={onPress}>
+        <AnimatedPath
+          animatedProps={animatedProps}
+          fill={color}
+          stroke={isSingleSlice ? "none" : "#fff"}
+          strokeWidth={1}
+        />
+        {showLabel && (
+          <AnimatedSvgText
+            x={labelX}
+            y={labelY}
+            fontSize="12"
+            fontWeight="700"
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            animatedProps={textAnimatedProps}
+          >
+            {formatNumber(value)}
+          </AnimatedSvgText>
+        )}
+      </G>
+    );
+  }
+);
+
+PieSlice.displayName = "PieSlice";
 
 /* ===================== LEGEND ITEM ===================== */
 
-const LegendItem: React.FC<LegendItemProps> = ({
-  item,
-  index,
-  progress,
-  isHovered,
-  onPress,
-}) => {
-  const animatedStyle = useAnimatedStyle(() => {
-    const delay = index * 0.08;
-    const animValue = Math.max(0, Math.min(1, progress.value - delay));
+const LegendItem = React.memo<LegendItemProps>(
+  ({ item, isHovered, onPress }) => {
+    // Minimal animation - only scale on hover
+    const animatedStyle = useAnimatedStyle(() => {
+      return {
+        transform: [
+          { scale: withTiming(isHovered ? 0.98 : 1, { duration: 150 }) },
+        ],
+      };
+    });
 
-    return {
-      opacity: 1,
-      transform: [
-        { scale: interpolate(animValue, [0, 1], [0.95, 1]) },
-        { translateY: interpolate(animValue, [0, 1], [10, 0]) },
-      ],
-    };
-  });
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.7}
-      onPress={onPress}
-      style={styles.legendItemWrapper}
-    >
-      <Animated.View
-        style={[
-          styles.legendItem,
-          isHovered && styles.legendItemHovered,
-          animatedStyle,
-        ]}
+    return (
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={onPress}
+        style={styles.legendItemWrapper}
       >
-        {/* status dot and status name */}
-        <View style={styles.lagendRow}>
-          <View style={[styles.legendDot, { backgroundColor: item.color }]} />
-          <Text style={styles.legendLabel} numberOfLines={1}>
-            {item.label}
+        <Animated.View
+          style={[
+            styles.legendItem,
+            isHovered && styles.legendItemHovered,
+            animatedStyle,
+          ]}
+        >
+          <View style={styles.lagendRow}>
+            <View style={[styles.legendDot, { backgroundColor: item.color }]} />
+            <Text style={styles.legendLabel} numberOfLines={1}>
+              {item.label}
+            </Text>
+          </View>
+
+          <View style={styles.legendTextContainer}>
+            <Text style={styles.legendValue}>
+              {item.value.toLocaleString()}
+            </Text>
+            <ChevronRight size={15} strokeWidth={2} color={"#9ca3af"} />
+          </View>
+        </Animated.View>
+      </TouchableOpacity>
+    );
+  }
+);
+
+LegendItem.displayName = "LegendItem";
+
+/* ===================== TOOLTIP ===================== */
+
+const Tooltip = React.memo<{ tooltip: TooltipData; style: any }>(
+  ({ tooltip, style }) => (
+    <Animated.View style={[styles.tooltipWrapper, style]}>
+      <View style={styles.tooltip}>
+        <View style={styles.tooltipHeader}>
+          <View
+            style={[styles.tooltipDot, { backgroundColor: tooltip.color }]}
+          />
+          <Text style={styles.tooltipLabel} numberOfLines={1}>
+            {tooltip.label}
           </Text>
         </View>
+        <Text style={styles.tooltipValue}>
+          {tooltip.value.toLocaleString()} leads
+        </Text>
+      </View>
+    </Animated.View>
+  )
+);
 
-        {/* total leads value and chevronright icon*/}
-        <View style={styles.legendTextContainer}>
-          <Text style={styles.legendValue}>{item.value.toLocaleString()}</Text>
-          <ChevronRight size={15} strokeWidth={2} color={"#9ca3af"} />
-        </View>
-      </Animated.View>
-    </TouchableOpacity>
-  );
-};
+Tooltip.displayName = "Tooltip";
 
 /* ===================== MAIN COMPONENT ===================== */
 
@@ -263,189 +359,214 @@ export default function LeadsPieChart({
 
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
-  const [tooltipTimer, setTooltipTimer] = useState<ReturnType<
-    typeof setTimeout
-  > | null>(null);
-
-  // Double click detection
+  const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastTapRef = useRef<{ time: number; index: number } | null>(null);
-  const DOUBLE_CLICK_DELAY = 300; // 300ms window for double click
 
-  // Transform API data to chart format
-  const chartData: LeadStatusData[] = leadData
-    .filter((item) => item.lead_count > 0) // 🚨 FIX
-    .map((item) => ({
-      key: `status_${item.lead_main_status_id}`,
-      label: item.lead_main_status_name ?? "Unknown",
-      value: item.lead_count,
-      color: getColorForStatus(item.lead_main_status_name),
-      statusId: item.lead_main_status_id,
-    }));
+  // Memoize chart data transformation
+  const chartData: LeadStatusData[] = useMemo(
+    () =>
+      leadData
+        .filter((item) => item.lead_count > 0)
+        .map((item) => ({
+          key: `status_${item.lead_main_status_id}`,
+          label: item.lead_main_status_name ?? "Unknown",
+          value: item.lead_count,
+          color: getColorForStatus(item.lead_main_status_name),
+          statusId: item.lead_main_status_id,
+        })),
+    [leadData]
+  );
 
+  const totalLeads = useMemo(
+    () => chartData.reduce((s, i) => s + i.value, 0),
+    [chartData]
+  );
+
+  // Pre-calculate all slice data with paths
+  const slices: SliceData[] = useMemo(() => {
+    if (chartData.length === 0) return [];
+
+    // Single slice case
+    if (chartData.length === 1) {
+      const item = chartData[0];
+      const pathData = createPathData(0, 359.99);
+      const { x: labelX, y: labelY } = getLabelPosition(179.995);
+
+      return [
+        {
+          ...item,
+          startAngle: 0,
+          endAngle: 359.99,
+          midAngle: 179.995,
+          percentage: 100,
+          pathData,
+          labelX,
+          labelY,
+        },
+      ];
+    }
+
+    // Multiple slices
+    let currentAngle = 0;
+    return chartData.map((item) => {
+      const percentage = totalLeads > 0 ? (item.value / totalLeads) * 100 : 0;
+      const angle = (percentage / 100) * 360;
+      const startAngle = currentAngle;
+      const endAngle = currentAngle + angle;
+      const midAngle = currentAngle + angle / 2;
+
+      const pathData = createPathData(startAngle, endAngle);
+      const { x: labelX, y: labelY } = getLabelPosition(midAngle);
+
+      currentAngle += angle;
+
+      return {
+        ...item,
+        startAngle,
+        endAngle,
+        midAngle,
+        percentage,
+        pathData,
+        labelX,
+        labelY,
+      };
+    });
+  }, [chartData, totalLeads]);
+
+  // Animation runs ONCE on mount
   useEffect(() => {
     progress.value = 0;
     progress.value = withTiming(1, {
-      duration: 1800,
+      duration: 1200,
       easing: Easing.bezier(0.25, 0.1, 0.25, 1),
     });
-  }, [leadData]);
+  }, []);
 
-  const totalLeads = chartData.reduce((s, i) => s + i.value, 0);
-
-  // Calculate slices with minimum angle for visibility
-
-  let currentAngle = 0;
-
-  const slices = chartData.map((item) => {
-    // ✅ SINGLE STATUS → NEAR FULL CIRCLE (SVG SAFE)
-    if (chartData.length === 1) {
-      return {
-        ...item,
-        startAngle: 0,
-        endAngle: 359.99, // ⭐ THIS IS THE FIX
-        midAngle: 179.995,
-        percentage: 100,
-      };
-    }
-
-    const percentage = totalLeads > 0 ? (item.value / totalLeads) * 100 : 0;
-
-    const angle = (percentage / 100) * 360;
-
-    const slice = {
-      ...item,
-      startAngle: currentAngle,
-      endAngle: currentAngle + angle,
-      midAngle: currentAngle + angle / 2,
-      percentage,
-    };
-
-    currentAngle += angle;
-    return slice;
-  });
-
-  // Show tooltip function (single click)
-  const showTooltip = (item: LeadStatusData, index: number) => {
-    const midAngle = slices[index].midAngle;
-    const angleRad = (midAngle - 90) * (Math.PI / 180);
-    const distance = 85;
-
-    const targetX = distance * Math.cos(angleRad);
-    const targetY = distance * Math.sin(angleRad);
-
-    if (!tooltip) {
-      tooltipX.value = targetX;
-      tooltipY.value = targetY;
-
-      tooltipOpacity.value = withTiming(1, {
-        duration: 200,
-        easing: Easing.out(Easing.ease),
-      });
-      tooltipScale.value = withSpring(1, {
-        damping: 15,
-        stiffness: 200,
-      });
-    } else {
-      tooltipX.value = withSpring(targetX, {
-        damping: 18,
-        stiffness: 180,
-        mass: 0.8,
-      });
-      tooltipY.value = withSpring(targetY, {
-        damping: 18,
-        stiffness: 180,
-        mass: 0.8,
-      });
-    }
-
-    setTooltip({
-      label: item.label,
-      value: item.value,
-      color: item.color,
-      angle: midAngle,
-    });
-    setHoveredIndex(index);
-
-    if (tooltipTimer) {
-      clearTimeout(tooltipTimer);
-    }
-
-    const timer = setTimeout(() => {
-      tooltipOpacity.value = withTiming(0, {
-        duration: 200,
-        easing: Easing.in(Easing.ease),
-      });
-      tooltipScale.value = withTiming(0.85, {
-        duration: 200,
-        easing: Easing.in(Easing.ease),
-      });
-
-      setTimeout(() => {
-        setTooltip(null);
-        setHoveredIndex(null);
-      }, 200);
-    }, 3500);
-
-    setTooltipTimer(timer);
-  };
-
-  // Handle slice press with double click detection
-  const handleSlicePress = (item: LeadStatusData, index: number) => {
-    const now = Date.now();
-    const lastTap = lastTapRef.current;
-
-    // Check if it's a double click
-    if (
-      lastTap &&
-      lastTap.index === index &&
-      now - lastTap.time < DOUBLE_CLICK_DELAY
-    ) {
-      // DOUBLE CLICK - Navigate
-      if (onStatusPress) {
-        onStatusPress(item.statusId, item.label);
-      }
-      lastTapRef.current = null; // Reset
-    } else {
-      // SINGLE CLICK - Show tooltip
-      showTooltip(item, index);
-      lastTapRef.current = { time: now, index };
-    }
-  };
-
-  // Handle legend press with double click detection (same as pie slices)
-  const handleLegendPress = (item: LeadStatusData, index: number) => {
-    const now = Date.now();
-    const lastTap = lastTapRef.current;
-
-    // Check if it's a double click
-    if (
-      lastTap &&
-      lastTap.index === index &&
-      now - lastTap.time < DOUBLE_CLICK_DELAY
-    ) {
-      // DOUBLE CLICK - Navigate
-      if (onStatusPress) {
-        onStatusPress(item.statusId, item.label);
-      }
-      lastTapRef.current = null; // Reset
-    } else {
-      // SINGLE CLICK - Show tooltip
-      showTooltip(item, index);
-      lastTapRef.current = { time: now, index };
-    }
-  };
-
+  // Clear tooltip timer on unmount
   useEffect(() => {
     return () => {
-      if (tooltipTimer) {
-        clearTimeout(tooltipTimer);
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
       }
     };
-  }, [tooltipTimer]);
+  }, []);
+
+  // Memoized tooltip show function
+  const showTooltip = useCallback(
+    (slice: SliceData, index: number) => {
+      const { x: targetX, y: targetY } = getTooltipPosition(slice.midAngle);
+
+      if (!tooltip) {
+        tooltipX.value = targetX;
+        tooltipY.value = targetY;
+
+        tooltipOpacity.value = withTiming(1, {
+          duration: 200,
+          easing: Easing.out(Easing.ease),
+        });
+        tooltipScale.value = withSpring(1, {
+          damping: 15,
+          stiffness: 200,
+        });
+      } else {
+        tooltipX.value = withSpring(targetX, {
+          damping: 18,
+          stiffness: 180,
+          mass: 0.8,
+        });
+        tooltipY.value = withSpring(targetY, {
+          damping: 18,
+          stiffness: 180,
+          mass: 0.8,
+        });
+      }
+
+      setTooltip({
+        label: slice.label,
+        value: slice.value,
+        color: slice.color,
+        x: targetX,
+        y: targetY,
+      });
+      setHoveredIndex(index);
+
+      if (tooltipTimerRef.current) {
+        clearTimeout(tooltipTimerRef.current);
+      }
+
+      tooltipTimerRef.current = setTimeout(() => {
+        tooltipOpacity.value = withTiming(0, {
+          duration: 200,
+          easing: Easing.in(Easing.ease),
+        });
+        tooltipScale.value = withTiming(0.85, {
+          duration: 200,
+          easing: Easing.in(Easing.ease),
+        });
+
+        setTimeout(() => {
+          setTooltip(null);
+          setHoveredIndex(null);
+        }, 200);
+      }, TOOLTIP_DURATION);
+    },
+    [tooltip, tooltipX, tooltipY, tooltipOpacity, tooltipScale]
+  );
+
+  // Memoized press handlers
+  const handleSlicePress = useCallback(
+    (slice: SliceData, index: number) => {
+      const now = Date.now();
+      const lastTap = lastTapRef.current;
+
+      if (
+        lastTap &&
+        lastTap.index === index &&
+        now - lastTap.time < DOUBLE_CLICK_DELAY
+      ) {
+        // DOUBLE CLICK - Navigate
+        if (onStatusPress) {
+          onStatusPress(slice.statusId, slice.label);
+        }
+        lastTapRef.current = null;
+      } else {
+        // SINGLE CLICK - Show tooltip
+        showTooltip(slice, index);
+        lastTapRef.current = { time: now, index };
+      }
+    },
+    [onStatusPress, showTooltip]
+  );
+
+  const handleLegendPress = useCallback(
+    (item: LeadStatusData, index: number) => {
+      const now = Date.now();
+      const lastTap = lastTapRef.current;
+
+      if (
+        lastTap &&
+        lastTap.index === index &&
+        now - lastTap.time < DOUBLE_CLICK_DELAY
+      ) {
+        // DOUBLE CLICK - Navigate
+        if (onStatusPress) {
+          onStatusPress(item.statusId, item.label);
+        }
+        lastTapRef.current = null;
+      } else {
+        // SINGLE CLICK - Show tooltip
+        const slice = slices[index];
+        if (slice) {
+          showTooltip(slice, index);
+          lastTapRef.current = { time: now, index };
+        }
+      }
+    },
+    [onStatusPress, showTooltip, slices]
+  );
 
   const tooltipAnimatedStyle = useAnimatedStyle(() => {
     "worklet";
-
     return {
       opacity: tooltipOpacity.value,
       transform: [
@@ -485,39 +606,15 @@ export default function LeadsPieChart({
           {slices.map((slice, index) => (
             <PieSlice
               key={slice.key}
-              color={slice.color}
-              startAngle={slice.startAngle}
-              endAngle={slice.endAngle}
+              slice={slice}
               animatedValue={progress}
               isHovered={hoveredIndex === index}
               onPress={() => handleSlicePress(slice, index)}
-              midAngle={slice.midAngle}
-              value={slice.value}
-              percentage={slice.percentage}
             />
           ))}
         </Svg>
 
-        {tooltip && (
-          <Animated.View style={[styles.tooltipWrapper, tooltipAnimatedStyle]}>
-            <View style={styles.tooltip}>
-              <View style={styles.tooltipHeader}>
-                <View
-                  style={[
-                    styles.tooltipDot,
-                    { backgroundColor: tooltip.color },
-                  ]}
-                />
-                <Text style={styles.tooltipLabel} numberOfLines={1}>
-                  {tooltip.label}
-                </Text>
-              </View>
-              <Text style={styles.tooltipValue}>
-                {tooltip.value.toLocaleString()} leads
-              </Text>
-            </View>
-          </Animated.View>
-        )}
+        {tooltip && <Tooltip tooltip={tooltip} style={tooltipAnimatedStyle} />}
       </View>
 
       <View style={styles.legendGrid}>
@@ -526,7 +623,6 @@ export default function LeadsPieChart({
             key={item.key}
             item={item}
             index={index}
-            progress={progress}
             isHovered={hoveredIndex === index}
             onPress={() => handleLegendPress(item, index)}
           />
@@ -589,12 +685,6 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#111827",
     marginBottom: 4,
-  },
-  tooltipHint: {
-    fontSize: 10,
-    fontWeight: "500",
-    color: "#9CA3AF",
-    fontStyle: "italic",
   },
   legendGrid: {
     flexDirection: "row",

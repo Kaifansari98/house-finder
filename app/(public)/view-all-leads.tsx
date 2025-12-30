@@ -210,6 +210,12 @@ export default function ViewAllLeads() {
     agent_id?: string;
   }>();
 
+
+  console.log("Lead main satus id: ", params.lead_main_status_id)
+  console.log("campaign id: :", params.campaign_id)
+  console.log("Agent id: ", params.agent_id)
+
+
   // Initial filters based on params
   const initialFilters = useMemo<LeadFilters>(
     () => ({

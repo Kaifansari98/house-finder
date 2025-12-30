@@ -28,6 +28,7 @@ import { useMastersData } from "@/hooks/sidebar/masters/useMastersData";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
 import SelectField from "./SmartDropDown";
 import Toast from "@/components/Toast";
+import { formatDateWithTime } from "@/utils/utils";
 
 type Props = {
   visible: boolean;
@@ -98,6 +99,8 @@ export default function LeadTerminalModal({
   const [followUpDate, setFollowUpDate] = useState<Date | null>(null);
   const [errors, setErrors] = useState<FormErrors>({});
 
+  const [focusedField, setFocusedField] = useState<string | null>(null);
+
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -125,12 +128,10 @@ export default function LeadTerminalModal({
   const onDateChange = (_: any, date?: Date) => {
     setShowDatePicker(false);
     if (!date) return;
+
     setFollowUpDate(date);
+    setFocusedField(null); // ✅ important
     setShowTimePicker(true);
-    // Clear error when date is selected
-    if (errors.followUpDate) {
-      setErrors((prev) => ({ ...prev, followUpDate: undefined }));
-    }
   };
 
   const onTimeChange = (_: any, time?: Date) => {
@@ -222,7 +223,7 @@ export default function LeadTerminalModal({
 
         <View style={styles.timeContainer}>
           <CalendarFoldIcon size={15} color="#9ca3af" strokeWidth={2} />
-          <Text style={styles.statusText}>{item.date}</Text>
+          <Text style={styles.statusText}>{formatDateWithTime(item.date)}</Text>
         </View>
       </View>
 
@@ -234,6 +235,7 @@ export default function LeadTerminalModal({
         {item.followup && (
           <View style={styles.infoRow}>
             <Calendar size={16} color="#9CA3AF" />
+            <Text style={styles.activityType}>{formatDateWithTime(item.followup)}</Text>
           </View>
         )}
       </View>
@@ -287,8 +289,14 @@ export default function LeadTerminalModal({
               <View style={styles.field}>
                 <Text style={styles.label}>Follow-up Date & Time</Text>
                 <TouchableOpacity
-                  style={[styles.dateInput]}
-                  onPress={() => setShowDatePicker(true)}
+                  style={[
+                    styles.dateInput,
+                    focusedField === "date" && styles.inputFocused,
+                  ]}
+                  onPress={() => {
+                    setFocusedField("date");
+                    setShowDatePicker(true);
+                  }}
                 >
                   <Text
                     style={[
@@ -312,8 +320,10 @@ export default function LeadTerminalModal({
                     styles.input,
                     styles.textArea,
                     errors.activityNotes && styles.inputError,
+                    focusedField === "notes" && styles.inputFocused,
                   ]}
                   value={activityNotes}
+                  onFocus={() => setFocusedField("notes")}
                   onChangeText={(text) => {
                     setActivityNotes(text);
                     if (errors.activityNotes) {

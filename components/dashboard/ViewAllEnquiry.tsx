@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react-native";
 import { useRouter } from "expo-router";
+import StatusDot from "../StatusDot";
 
 const ViewAllEnquiry = () => {
   const authData = useAuthStore(selectAuthData);
@@ -39,13 +40,28 @@ const ViewAllEnquiry = () => {
   const enquiryData = dashboardData?.data.view_all_lead_enquiry || [];
 
   // Type mapping
-  const getType = (rentSell: string) => {
-    const types: Record<string, string> = {
-      "1": "Rent",
-      "2": "Sell",
-      "3": "Buy",
-    };
-    return types[rentSell] || "N/A";
+
+  type RentSellType = "rent" | "sell" | "buyer";
+
+  const RENT_SELL_LABEL_MAP: Record<string, RentSellType> = {
+    "1": "rent",
+    "2": "sell",
+    "3": "buyer",
+  };
+
+  const RENT_SELL_COLOR_MAP: Record<RentSellType, string> = {
+    rent: "#3b82f6", // blue
+    sell: "#22c55e", // green
+    buyer: "#f97316", // orange
+  };
+
+  const getRentSellType = (rentSell: string): RentSellType | null => {
+    return RENT_SELL_LABEL_MAP[rentSell] ?? null;
+  };
+
+  const formatTypeLabel = (type: RentSellType | null) => {
+    if (!type) return "N/A";
+    return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
   // Format date
@@ -66,20 +82,6 @@ const ViewAllEnquiry = () => {
     }));
   };
 
-  // Helper function for badge colors
-  const getTypeBadgeColor = (rentSell: string) => {
-    switch (rentSell) {
-      case "1":
-        return styles.rentBadge;
-      case "2":
-        return styles.sellBadge;
-      case "3":
-        return styles.buyBadge;
-      default:
-        return styles.defaultBadge;
-    }
-  };
-
   // Check if description is long
   const isDescriptionLong = (description: string) => {
     return description && description.length > 50;
@@ -90,14 +92,20 @@ const ViewAllEnquiry = () => {
     const isExpanded = expandedItems[item.id];
     const description = item.description || "No description";
     const shouldShowReadMore = isDescriptionLong(description);
+    const type = getRentSellType(item.rent_sell);
+    const badgeColor = type ? RENT_SELL_COLOR_MAP[type] : "#e5e7eb";
 
     return (
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           {/* Badge */}
-          <View style={[styles.typeBadge, getTypeBadgeColor(item.rent_sell)]}>
-            <Text style={styles.typeBadgeText}>{getType(item.rent_sell)}</Text>
+          <View style={styles.typeRow}>
+            <StatusDot color={badgeColor} size={8} />
+            <Text style={[styles.typeText]}>
+              {formatTypeLabel(type).toUpperCase()}
+            </Text>
           </View>
+
           {/* Date */}
           <View style={styles.timeContainer}>
             <CalendarFoldIcon size={15} color="#9ca3af" strokeWidth={2} />
@@ -379,29 +387,19 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  typeBadge: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    alignSelf: "flex-start",
+  typeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
   },
-  rentBadge: {
-    backgroundColor: "#dbeafe",
-  },
-  sellBadge: {
-    backgroundColor: "#dcfce7",
-  },
-  buyBadge: {
-    backgroundColor: "#fef3c7",
-  },
-  defaultBadge: {
-    backgroundColor: "#f1f5f9",
-  },
-  typeBadgeText: {
+
+  typeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#0f172a",
+    textTransform: "capitalize",
+    color: "#0f172a"
   },
+
   timeContainer: {
     flexDirection: "row",
     alignItems: "center",

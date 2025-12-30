@@ -37,6 +37,7 @@ export default function SelectField({
 }: Props) {
   const [visible, setVisible] = useState(false);
   const [search, setSearch] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const selectedLabel =
     options.find((o) => o.value === value)?.label || "Not selected";
@@ -55,6 +56,7 @@ export default function SelectField({
     onChange(val);
     setVisible(false);
     setSearch("");
+    setIsFocused(false);
   };
 
   return (
@@ -68,12 +70,16 @@ export default function SelectField({
         <TouchableOpacity
           style={[
             styles.trigger,
+            isFocused && styles.focusBorder,
             isDisabled && styles.disabledTrigger,
             hasError && styles.errorBorder,
           ]}
           disabled={isDisabled}
           activeOpacity={0.8}
-          onPress={() => setVisible(true)}
+          onPress={() => {
+            setIsFocused(true);
+            setVisible(true);
+          }}
         >
           {loading ? (
             <ActivityIndicator size="small" />
@@ -103,7 +109,13 @@ export default function SelectField({
             {/* HEADER */}
             <View style={styles.header}>
               <Text style={styles.headerTitle}>{label}</Text>
-              <TouchableOpacity onPress={() => setVisible(false)} hitSlop={10}>
+              <TouchableOpacity
+                onPress={() => {
+                  setVisible(false);
+                  setIsFocused(false);
+                }}
+                hitSlop={10}
+              >
                 <CircleX size={22} color="#0f172a" />
               </TouchableOpacity>
             </View>
@@ -159,7 +171,7 @@ export default function SelectField({
 
 const styles = StyleSheet.create({
   field: {
-   width: "100%"
+    width: "100%",
   },
 
   label: {
@@ -285,5 +297,10 @@ const styles = StyleSheet.create({
     textAlign: "center",
     padding: 20,
     color: "#9ca3af",
+  },
+
+  focusBorder: {
+    borderColor: "#EFBF04",
+    borderWidth: 1.5,
   },
 });
