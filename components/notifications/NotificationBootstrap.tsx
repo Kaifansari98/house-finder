@@ -14,44 +14,40 @@ const appVersion = Constants.expoConfig?.version ?? "unknown";
 export default function NotificationBootstrap() {
   const { mutate: saveToken } = useSaveFcmToken();
   const authData = useAuthStore(selectAuthData);
-
-  const { token: savedToken, setToken } = useFcmStore();
+  const { setToken } = useFcmStore();
 
   useNotificationNavigation();
 
   useEffect(() => {
     if (!authData?.encrypted_user_id) return;
 
-    registerForPushNotifications().then((newToken) => {
-      if (!newToken) return;
+    let isMounted = true;
 
-      // 🔒 SAME TOKEN → SKIP API CALL
-      if (savedToken === newToken) {
-        console.log("FCM token unchanged. Skipping API call.");
-        return;
-      }
+    (async () => {
+      const token = await registerForPushNotifications();
+      if (!token || !isMounted) return;
 
-      console.log("New FCM token detected. Syncing...");
+      const payload = {
+        user_id: authData.encrypted_user_id,
+        expo_push_token: token,
+        platform: Platform.OS,
+        device_id: Device.osInternalBuildId ?? undefined,
+        device_model: Device.modelName ?? undefined,
+        os_version: Device.osVersion ?? undefined,
+        app_version: appVersion,
+      };
 
-      saveToken(
-        {
-          user_id: authData.encrypted_user_id,
-          expo_push_token: newToken,
-          platform: Platform.OS,
-          device_id: Device.osInternalBuildId ?? undefined,
-          device_model: Device.modelName ?? undefined,
-          os_version: Device.osVersion ?? undefined,
-          app_version: appVersion,
+      saveToken(payload, {
+        onSuccess: () => {
+          setToken(token, Platform.OS);
         },
-        {
-          onSuccess: () => {
-            // ✅ Save locally ONLY after backend success
-            setToken(newToken, Platform.OS);
-          },
-        }
-      );
-    });
-  }, [authData?.encrypted_user_id, savedToken, saveToken, setToken]);
+      });
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [authData?.encrypted_user_id, saveToken, setToken]);
 
   return null;
 }

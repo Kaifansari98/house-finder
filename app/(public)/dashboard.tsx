@@ -1,6 +1,12 @@
 // screens/Dashboard.tsx
 import React, { useState } from "react";
-import { StyleSheet, Text, View, FlatList } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  FlatList,
+  TouchableOpacity,
+} from "react-native";
 import { useAuthStore, selectAuthData } from "@/stores/auth-store";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -47,7 +53,6 @@ export default function Dashboard() {
   const authData = useAuthStore(selectAuthData);
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const [sidebarVisible, setSidebarVisible] = useState(false);
-  const { clearToken } = useFcmStore();
 
   const { data: sidebarData } = useSidebarData(
     authData
@@ -57,6 +62,7 @@ export default function Dashboard() {
         }
       : null
   );
+
   const { data: dashboardData } = useDashboardData(
     authData
       ? {
@@ -144,11 +150,15 @@ export default function Dashboard() {
         ListHeaderComponent={
           <>
             {/* Page Title */}
-            <View style={styles.pageHeader}>
-              <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
-              <Text style={styles.pageSubtitle}>
-                Welcome back, {user.fullname.split(" ")[0]}.
-              </Text>
+            <View
+              style={{ flexDirection: "row", justifyContent: "space-between" }}
+            >
+              <View style={styles.pageHeader}>
+                <Text style={styles.pageTitle}>👋🏻 Dashboard</Text>
+                <Text style={styles.pageSubtitle}>
+                  Welcome back, {user.fullname.split(" ")[0]}.
+                </Text>
+              </View>
             </View>
 
             <View style={styles.statsCardsContainer}>

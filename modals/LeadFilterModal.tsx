@@ -1,11 +1,11 @@
+import React, {
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
-  useLeadAgents,
-  useMastersData,
-} from "@/hooks/sidebar/masters/useMastersData";
-import React, { useMemo, useState } from "react";
-import {
-  Modal,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -13,260 +13,280 @@ import {
   View,
   Platform,
 } from "react-native";
+import { BottomSheetModal, BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { Calendar, CircleX } from "lucide-react-native";
+
 import SelectField from "./SmartDropDown";
 import type { LeadFilters } from "@/app/(public)/view-all-leads";
-import { CircleX, Calendar } from "lucide-react-native";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import {
+  useLeadAgents,
+  useMastersData,
+} from "@/hooks/sidebar/masters/useMastersData";
+
+/* ================= TYPES ================= */
+
+export type LeadFilterSheetRef = {
+  open: () => void;
+  close: () => void;
+};
 
 type Props = {
   values: LeadFilters;
   onChange: (v: LeadFilters) => void;
-  visible: boolean;
   onApply: () => void;
-  onClose: () => void;
 };
 
-export default function LeadFilterModal({
-  values,
-  onChange,
-  visible,
-  onApply,
-  onClose,
-}: Props) {
-  /* ================= AUTH ================= */
-  const authData = useAuthStore(selectAuthData);
-  const userId = authData?.user.user_id;
+/* ================= COMPONENT ================= */
 
-  const [showDatePicker, setShowDatePicker] = useState(false);
+const LeadFilterSheet = forwardRef<LeadFilterSheetRef, Props>(
+  ({ values, onChange, onApply }, ref) => {
+    const authData = useAuthStore(selectAuthData);
+    const userId = authData?.user.user_id;
 
-  /* ================= MASTERS ================= */
-  const {
-    leadStatusQuery,
-    leadMainStatusQuery,
-    leadSourceQuery,
-    leadChannelQuery,
-    leadCampaignQuery,
-  } = useMastersData();
+    const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const { data: agentsData, isLoading: agentsLoading } = useLeadAgents(userId);
+    const bottomSheetRef = useRef<BottomSheetModal>(null);
+    const snapPoints = useMemo(() => ["70%", "90%"], []);
 
-  /* ================= HELPERS ================= */
-  const map = (arr: any[] | undefined, l: string, v: string) =>
-    arr?.map((i) => ({ label: String(i[l]), value: String(i[v]) })) ?? [];
+    /* ===== expose open / close ===== */
+    useImperativeHandle(ref, () => ({
+      open: () => bottomSheetRef.current?.present(),
+      close: () => bottomSheetRef.current?.dismiss(),
+    }));
 
-  const leadStatuses = useMemo(
-    () =>
-      map(
-        leadStatusQuery.data?.data.lead_status,
-        "lead_status_name",
-        "lead_status_id"
-      ),
-    [leadStatusQuery.data]
-  );
+    /* ================= MASTERS ================= */
 
-  const leadSubStatuses = useMemo(
-    () =>
-      map(
-        leadMainStatusQuery.data?.data.lead_main_statuses,
-        "lead_main_status_name",
-        "lead_main_status_id"
-      ),
-    [leadMainStatusQuery.data]
-  );
+    const {
+      leadStatusQuery,
+      leadMainStatusQuery,
+      leadSourceQuery,
+      leadChannelQuery,
+      leadCampaignQuery,
+    } = useMastersData();
 
-  const sources = useMemo(
-    () => map(leadSourceQuery.data?.data.source, "source_name", "source_id"),
-    [leadSourceQuery.data]
-  );
+    const { data: agentsData, isLoading: agentsLoading } =
+      useLeadAgents(userId);
 
-  const channels = useMemo(
-    () => map(leadChannelQuery.data?.data.lead_channel, "cname", "cid"),
-    [leadChannelQuery.data]
-  );
+    /* ================= HELPERS ================= */
+    const map = (arr: any[] | undefined, l: string, v: string) =>
+      arr?.map((i) => ({ label: String(i[l]), value: String(i[v]) })) ?? [];
 
-  const campaigns = useMemo(
-    () =>
-      map(
-        leadCampaignQuery.data?.data.lead_campaign,
-        "campaign_name",
-        "campaign_id"
-      ),
-    [leadCampaignQuery.data]
-  );
+    const leadStatuses = useMemo(
+      () =>
+        map(
+          leadStatusQuery.data?.data.lead_status,
+          "lead_status_name",
+          "lead_status_id"
+        ),
+      [leadStatusQuery.data]
+    );
 
-  const agents = useMemo(
-    () => map(agentsData?.data.lead_agents, "display_name", "user_id"),
-    [agentsData]
-  );
+    const leadSubStatuses = useMemo(
+      () =>
+        map(
+          leadMainStatusQuery.data?.data.lead_main_statuses,
+          "lead_main_status_name",
+          "lead_main_status_id"
+        ),
+      [leadMainStatusQuery.data]
+    );
 
-  /* ================= DATE HANDLER ================= */
-  const onDateChange = (_: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (!selectedDate) return;
+    const sources = useMemo(
+      () => map(leadSourceQuery.data?.data.source, "source_name", "source_id"),
+      [leadSourceQuery.data]
+    );
 
-    const yyyy = selectedDate.getFullYear();
-    const mm = String(selectedDate.getMonth() + 1).padStart(2, "0");
-    const dd = String(selectedDate.getDate()).padStart(2, "0");
+    const channels = useMemo(
+      () => map(leadChannelQuery.data?.data.lead_channel, "cname", "cid"),
+      [leadChannelQuery.data]
+    );
 
-    onChange({
-      ...values,
-      date_created: `${yyyy}-${mm}-${dd}`,
-    });
-  };
+    const campaigns = useMemo(
+      () =>
+        map(
+          leadCampaignQuery.data?.data.lead_campaign,
+          "campaign_name",
+          "campaign_id"
+        ),
+      [leadCampaignQuery.data]
+    );
 
-  /* ================= UI ================= */
-  return (
-    <>
-      <Modal
-        visible={visible}
-        transparent
-        animationType="slide"
-        onRequestClose={onClose}
-      >
-        <View style={styles.overlay}>
-          <View style={styles.sheet}>
-            {/* HEADER */}
-            <View style={styles.header}>
-              <Text style={styles.title}>Search & Filter</Text>
-              <TouchableOpacity onPress={onClose}>
-                <CircleX size={22} color="#0f172a" />
-              </TouchableOpacity>
+    const agents = useMemo(
+      () => map(agentsData?.data.lead_agents, "display_name", "user_id"),
+      [agentsData]
+    );
+
+    /* ================= DATE HANDLER ================= */
+    const onDateChange = (_: any, selectedDate?: Date) => {
+      setShowDatePicker(false);
+      if (!selectedDate) return;
+
+      const yyyy = selectedDate.getFullYear();
+      const mm = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const dd = String(selectedDate.getDate()).padStart(2, "0");
+
+      onChange({
+        ...values,
+        date_created: `${yyyy}-${mm}-${dd}`,
+      });
+    };
+
+    /* ================= UI ================= */
+
+    return (
+      <>
+        <BottomSheetModal
+          index={1}
+          ref={bottomSheetRef}
+          snapPoints={snapPoints}
+          enablePanDownToClose
+          backgroundStyle={styles.sheet}
+          handleComponent={null}
+        >
+          {/* HEADER */}
+          <View style={styles.header}>
+            <Text style={styles.title}>Search & Filter</Text>
+            <TouchableOpacity onPress={() => bottomSheetRef.current?.dismiss()}>
+              <CircleX size={22} color="#0f172a" />
+            </TouchableOpacity>
+          </View>
+
+          {/* CONTENT */}
+          <BottomSheetScrollView contentContainerStyle={styles.content}>
+            <View style={styles.row}>
+              <View style={styles.field}>
+                <Text style={styles.label}>Reference Code</Text>
+                <TextInput
+                  style={styles.input}
+                  value={values.ref}
+                  placeholder="ex. HFL-32343"
+                  onChangeText={(t) => onChange({ ...values, ref: t })}
+                />
+              </View>
+
+              <View style={styles.field}>
+                <Text style={styles.label}>Customer Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={values.name}
+                  placeholder="ex. John Wick"
+                  onChangeText={(t) => onChange({ ...values, name: t })}
+                />
+              </View>
             </View>
 
-            {/* CONTENT */}
-            <ScrollView contentContainerStyle={styles.content}>
-              <View style={styles.row}>
-                <View style={styles.field}>
-                  <Text style={styles.label}>Reference Code</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={values.ref}
-                    placeholder="ex. HFL-32343"
-                    onChangeText={(t) => onChange({ ...values, ref: t })}
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <Text style={styles.label}>Customer Name</Text>
-                  <TextInput
-                    style={styles.input}
-                    value={values.name}
-                    placeholder="ex. John Wick"
-                    onChangeText={(t) => onChange({ ...values, name: t })}
-                  />
-                </View>
-              </View>
-
-              <View style={styles.row}>
-                <View style={styles.field}>
-                  <Text style={styles.label}>Mobile</Text>
-                  <TextInput
-                    style={styles.input}
-                    keyboardType="numeric"
-                    placeholder="ex. 9887338574"
-                    value={values.mobile}
-                    onChangeText={(t) => onChange({ ...values, mobile: t })}
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <SelectField
-                    label="Lead Status"
-                    options={leadStatuses}
-                    value={values.lead_status}
-                    onChange={(v) =>
-                      onChange({ ...values, lead_status: v ?? "" })
-                    }
-                  />
-                </View>
-              </View>
-              <View style={styles.row}>
-                <View style={styles.field}>
-                  <SelectField
-                    label="Lead Sub Status"
-                    options={leadSubStatuses}
-                    value={values.lead_sub_status}
-                    onChange={(v) =>
-                      onChange({
-                        ...values,
-                        lead_sub_status: v ?? "",
-                      })
-                    }
-                  />
-                </View>
-                <View style={styles.field}>
-                  <SelectField
-                    label="Source"
-                    options={sources}
-                    value={values.lead_source}
-                    onChange={(v) =>
-                      onChange({
-                        ...values,
-                        lead_source: v ?? "",
-                      })
-                    }
-                  />
-                </View>
-              </View>
-              <View style={styles.row}>
-                <View style={styles.field}>
-                  <SelectField
-                    label="Channel"
-                    options={channels}
-                    value={values.lead_channel}
-                    onChange={(v) =>
-                      onChange({
-                        ...values,
-                        lead_channel: v ?? "",
-                      })
-                    }
-                  />
-                </View>
-
-                <View style={styles.field}>
-                  <SelectField
-                    label="Campaign"
-                    options={campaigns}
-                    value={values.lead_campaign}
-                    onChange={(v) =>
-                      onChange({
-                        ...values,
-                        lead_campaign: v ?? "",
-                      })
-                    }
-                  />
-                </View>
-              </View>
-
-              <SelectField
-                label="Agent"
-                options={agents}
-                loading={agentsLoading}
-                disabled={!userId}
-                value={values.lead_agent}
-                onChange={(v) => onChange({ ...values, lead_agent: v ?? "" })}
-              />
-
-              {/* DATE FIELD */}
+            <View style={styles.row}>
               <View style={styles.field}>
-                <Text style={styles.label}>Follow-up Date</Text>
-                <TouchableOpacity
-                  style={styles.dateInput}
-                  onPress={() => setShowDatePicker(true)}
-                >
-                  <Text
-                    style={[
-                      styles.dateText,
-                      !values.date_created && styles.placeholder,
-                    ]}
-                  >
-                    {values.date_created || "Select date"}
-                  </Text>
-                  <Calendar size={18} color="#6B7280" />
-                </TouchableOpacity>
+                <Text style={styles.label}>Mobile</Text>
+                <TextInput
+                  style={styles.input}
+                  keyboardType="numeric"
+                  placeholder="ex. 9887338574"
+                  value={values.mobile}
+                  onChangeText={(t) => onChange({ ...values, mobile: t })}
+                />
               </View>
-            </ScrollView>
+
+              <View style={styles.field}>
+                <SelectField
+                  label="Lead Status"
+                  options={leadStatuses}
+                  value={values.lead_status}
+                  onChange={(v) =>
+                    onChange({ ...values, lead_status: v ?? "" })
+                  }
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.field}>
+                <SelectField
+                  label="Lead Sub Status"
+                  options={leadSubStatuses}
+                  value={values.lead_sub_status}
+                  onChange={(v) =>
+                    onChange({
+                      ...values,
+                      lead_sub_status: v ?? "",
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.field}>
+                <SelectField
+                  label="Source"
+                  options={sources}
+                  value={values.lead_source}
+                  onChange={(v) =>
+                    onChange({
+                      ...values,
+                      lead_source: v ?? "",
+                    })
+                  }
+                />
+              </View>
+            </View>
+
+            <View style={styles.row}>
+              <View style={styles.field}>
+                <SelectField
+                  label="Channel"
+                  options={channels}
+                  value={values.lead_channel}
+                  onChange={(v) =>
+                    onChange({
+                      ...values,
+                      lead_channel: v ?? "",
+                    })
+                  }
+                />
+              </View>
+
+              <View style={styles.field}>
+                <SelectField
+                  label="Campaign"
+                  options={campaigns}
+                  value={values.lead_campaign}
+                  onChange={(v) =>
+                    onChange({
+                      ...values,
+                      lead_campaign: v ?? "",
+                    })
+                  }
+                />
+              </View>
+            </View>
+
+            <SelectField
+              label="Agent"
+              options={agents}
+              loading={agentsLoading}
+              disabled={!userId}
+              value={values.lead_agent}
+              onChange={(v) => onChange({ ...values, lead_agent: v ?? "" })}
+            />
+
+            {/* DATE FIELD */}
+            <View style={styles.field}>
+              <Text style={styles.label}>Follow-up Date</Text>
+              <TouchableOpacity
+                style={styles.dateInput}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Text
+                  style={[
+                    styles.dateText,
+                    !values.date_created && styles.placeholder,
+                  ]}
+                >
+                  {values.date_created || "Select date"}
+                </Text>
+                <Calendar size={18} color="#6B7280" />
+              </TouchableOpacity>
+            </View>
 
             {/* FOOTER */}
             <View style={styles.footer}>
@@ -291,47 +311,51 @@ export default function LeadFilterModal({
                 <Text style={styles.resetText}>Reset</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={styles.searchBtn} onPress={onApply}>
+              <TouchableOpacity
+                style={styles.searchBtn}
+                onPress={() => {
+                  onApply();
+                  bottomSheetRef.current?.dismiss();
+                }}
+              >
                 <Text style={styles.btnText}>Search</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+          </BottomSheetScrollView>
+        </BottomSheetModal>
 
-      {/* DATE PICKER */}
-      {showDatePicker && (
-        <DateTimePicker
-          value={
-            values.date_created ? new Date(values.date_created) : new Date()
-          }
-          mode="date"
-          display={Platform.OS === "ios" ? "inline" : "default"}
-          onChange={onDateChange}
-        />
-      )}
-    </>
-  );
-}
+        {/* DATE PICKER */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={
+              values.date_created ? new Date(values.date_created) : new Date()
+            }
+            mode="date"
+            display={Platform.OS === "ios" ? "inline" : "default"}
+            onChange={onDateChange}
+          />
+        )}
+      </>
+    );
+  }
+);
+
+LeadFilterSheet.displayName = "LeadFilterSheet";
+
+export default LeadFilterSheet;
 
 /* ============================ STYLES ============================ */
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "flex-end",
-  },
-
   sheet: {
-    height: "75%",
     backgroundColor: "#fff",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    overflow: "hidden",
   },
 
   header: {
+    borderTopStartRadius: 15,
+    borderEndStartRadius: 15,
     backgroundColor: "#EFBF04",
     padding: 16,
     flexDirection: "row",
@@ -395,10 +419,8 @@ const styles = StyleSheet.create({
 
   footer: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
+    alignSelf: "flex-end",
+    gap: 5,
   },
 
   searchBtn: {

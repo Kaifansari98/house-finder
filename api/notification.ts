@@ -26,3 +26,22 @@ export const saveFcmToken = (payload: SaveFcmTokenRequest) =>
     method: "POST",
     body: payload,
   });
+
+/* ================= TYPES ================= */
+
+export type SendAppNotificationRequest = {
+  user_id: string; // encrypted user id
+};
+
+export type SendAppNotificationResponse = {
+  message: string;
+  status: number;
+};
+
+/* ================= API FUNCTION ================= */
+
+export const sendAppNotification = (payload: SendAppNotificationRequest) =>
+  apiClient<SendAppNotificationResponse>("send-app-notifcation", {
+    method: "POST",
+    body: payload,
+  });

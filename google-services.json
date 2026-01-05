@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "57719521746",
+    "project_id": "house-finde",
+    "storage_bucket": "house-finde.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:57719521746:android:e8c342f4ad8d57a4c9880b",
+        "android_client_info": {
+          "package_name": "com.devxkaif.housefinder"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcTxoYzepgz9jnJ-vWpIo18AP28DN5MkU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

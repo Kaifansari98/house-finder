@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
+    alignItems: "center",
     gap: 12,
   },
   headerTitle: {
@@ -280,7 +280,7 @@ const styles = StyleSheet.create({
   },
   btnText: {
     fontSize: 12,
-    fontWeight: "500",
+    fontWeight: "600",
   },
 
   // ============ PREVIEW/COLLAPSED STYLES ============

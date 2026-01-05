@@ -3,6 +3,9 @@ import {
   saveFcmToken,
   SaveFcmTokenRequest,
   SaveFcmTokenResponse,
+  sendAppNotification,
+  SendAppNotificationRequest,
+  SendAppNotificationResponse,
 } from "@/api/notification";
 import { useMutation } from "@tanstack/react-query";
 
@@ -20,5 +23,16 @@ export const useSaveFcmToken = () => {
       console.error("📤 Payload:", variables);
       console.error("🔥 Error:", error);
     },
+  });
+};
+
+
+export const useSendAppNotification = () => {
+  return useMutation<
+    SendAppNotificationResponse,
+    Error,
+    SendAppNotificationRequest
+  >({
+    mutationFn: sendAppNotification,
   });
 };

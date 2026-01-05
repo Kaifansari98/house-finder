@@ -1,7 +1,7 @@
 import ScreenNavbar from "@/components/ScreenNavbar";
 import { useLeadDetails } from "@/hooks/sidebar/useLeadsApi";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -26,9 +26,9 @@ import {
 import StatusDot from "@/components/StatusDot";
 import { normalizeStatusKey } from "@/utils/utils";
 import { selectAuthData, useAuthStore } from "@/stores/auth-store";
-import LeadTerminalModal from "@/modals/LeadTerminalModal";
 import LeadNotesModal from "@/modals/LeadNotesModal";
 import ScheduleMeetingModal from "@/modals/ScheduleMeetingModal";
+import LeadTerminalSheet, { LeadTerminalSheetRef } from "@/modals/LeadTerminalModal";
 
 export default function LeadDetails() {
   const { enc_id } = useLocalSearchParams<{ enc_id: string }>();
@@ -38,7 +38,7 @@ export default function LeadDetails() {
   const authData = useAuthStore(selectAuthData);
   const adminId = authData?.role.role_master_id;
 
-  const [terminalOpen, setTerminalOpen] = useState(false);
+  const terminalSheetRef = useRef<LeadTerminalSheetRef>(null);
   const [notesOpen, setNotesopen] = useState(false);
   const [meetingOpen, setMeetingOpen] = useState(false);
 
@@ -175,7 +175,7 @@ export default function LeadDetails() {
           <View style={styles.actionsGrid}>
             <TouchableOpacity
               style={styles.actionButton}
-              onPress={() => setTerminalOpen(true)}
+              onPress={() => terminalSheetRef.current?.open()}
             >
               <LaptopMinimal size={20} color="#EFBF04" />
               <Text style={styles.actionButtonText}>Terminal</Text>
@@ -197,7 +197,7 @@ export default function LeadDetails() {
                   params: {
                     lead_id_enc: enc_id,
                   },
-                })
+                }) 
               }
             >
               <SquarePen size={20} color="#EFBF04" />
@@ -435,11 +435,10 @@ export default function LeadDetails() {
           />
         </View>
 
-        <LeadTerminalModal
+        <LeadTerminalSheet
           leadId={enc_id}
           referenceNo={data.pfix}
-          visible={terminalOpen}
-          onClose={() => setTerminalOpen(false)}
+          ref={terminalSheetRef}
         />
 
         <LeadNotesModal

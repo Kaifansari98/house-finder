@@ -21,7 +21,7 @@ import { useInfiniteFilterLeadApp } from "@/hooks/sidebar/useLeadsApi";
 import type { FilterLeadAppItem } from "@/api/api";
 import StatusDot from "@/components/StatusDot";
 import { formatDate, normalizeStatusKey } from "@/utils/utils";
-import LeadFilterModal from "@/modals/LeadFilterModal";
+import LeadFilterSheet, { LeadFilterSheetRef } from "@/modals/LeadFilterModal";
 
 /* ===================== TYPES ===================== */
 
@@ -210,11 +210,9 @@ export default function ViewAllLeads() {
     agent_id?: string;
   }>();
 
-
-  console.log("Lead main satus id: ", params.lead_main_status_id)
-  console.log("campaign id: :", params.campaign_id)
-  console.log("Agent id: ", params.agent_id)
-
+  // console.log("Lead main satus id: ", params.lead_main_status_id)
+  // console.log("campaign id: :", params.campaign_id)
+  // console.log("Agent id: ", params.agent_id)
 
   // Initial filters based on params
   const initialFilters = useMemo<LeadFilters>(
@@ -236,7 +234,7 @@ export default function ViewAllLeads() {
   const [draftFilters, setDraftFilters] = useState<LeadFilters>(initialFilters);
   const [appliedFilters, setAppliedFilters] =
     useState<LeadFilters>(initialFilters);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const filterSheetRef = React.useRef<LeadFilterSheetRef>(null);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -315,18 +313,14 @@ export default function ViewAllLeads() {
     setAppliedFilters(initialFilters);
   }, [initialFilters]);
 
+const handleOpenModal = useCallback(() => {
+  console.log("REF:", filterSheetRef.current);
+  filterSheetRef.current?.open();
+}, []);
+
   const handleApplyFilters = useCallback(() => {
     setAppliedFilters(draftFilters);
-    setMenuOpen(false);
   }, [draftFilters]);
-
-  const handleCloseModal = useCallback(() => {
-    setMenuOpen(false);
-  }, []);
-
-  const handleOpenModal = useCallback(() => {
-    setMenuOpen(true);
-  }, []);
 
   const handleLoadMore = useCallback(() => {
     if (query.hasNextPage && !query.isFetchingNextPage) {
@@ -370,7 +364,7 @@ export default function ViewAllLeads() {
   }
 
   return (
-    <SafeAreaView edges={["top", "left", "right"]} style={styles.safeArea}>
+    <SafeAreaView edges={["top", "left", "right", "bottom"]} style={styles.safeArea}>
       <ScreenNavbar title="View All Leads" onMenuPress={handleOpenModal} />
 
       {query.isLoading ? (
@@ -398,12 +392,11 @@ export default function ViewAllLeads() {
         />
       )}
 
-      <LeadFilterModal
+      <LeadFilterSheet
+        ref={filterSheetRef}
         values={draftFilters}
         onChange={setDraftFilters}
-        visible={menuOpen}
         onApply={handleApplyFilters}
-        onClose={handleCloseModal}
       />
     </SafeAreaView>
   );

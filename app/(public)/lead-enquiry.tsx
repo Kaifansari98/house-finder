@@ -260,7 +260,7 @@ export default LeadEnquiry;
 
 /* ---------------- STYLES ---------------- */
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F9FAFB" },
+  safeArea: { flex: 1, backgroundColor: "#ffffff" },
   listContainer: { padding: 10 },
 
   center: {

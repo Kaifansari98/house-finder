@@ -1,7 +1,7 @@
 // components/Sidebar.tsx
 import { SidebarMenuItem } from "@/api/api";
 import { useRouter } from "expo-router";
-import { ChevronDown, ChevronRight } from "lucide-react-native";
+import { Building2, CheckSquare, ChevronDown, ChevronRight, FileText, Folder, Lock, Phone, Search, Settings, Users } from "lucide-react-native";
 import React, { useMemo, useState } from "react";
 import {
   Dimensions,
@@ -93,25 +93,25 @@ export default function Sidebar({
     }, {} as Record<number, SidebarMenuItem[]>);
   }, [finalChildMenu]);
 
+  const ICON_MAP: Record<string, React.FC<any>> = {
+    "bxs-buildings": Building2,
+    "bxs-user-detail": Users,
+    "bxs-lock": Lock,
+    "bxs-report": FileText,
+    "bx-task": CheckSquare,
+    "bxs-file-find": Search,
+    "bx-phone-call": Phone,
+    "bx-cog": Settings,
+    "bx-folder": Folder,
+  };
+
   const getLucideIcon = (iconName?: string | null) => {
     if (!iconName) return null;
 
-    const iconMap: Record<string, React.FC<any>> = {
-      "bxs-buildings": require("lucide-react-native").Building2,
-      "bxs-user-detail": require("lucide-react-native").Users,
-      "bxs-lock": require("lucide-react-native").Lock,
-      "bxs-report": require("lucide-react-native").FileText,
-      "bx-task": require("lucide-react-native").CheckSquare,
-      "bxs-file-find": require("lucide-react-native").Search,
-      "bx-phone-call": require("lucide-react-native").Phone,
-      "bx-cog": require("lucide-react-native").Settings,
+    const Icon = ICON_MAP[iconName];
+    if (!Icon) return null;
 
-      // ✅ STATIC PARENT ICON
-      "bx-folder": require("lucide-react-native").Folder,
-    };
-
-    const IconComponent = iconMap[iconName];
-    return IconComponent ? <IconComponent size={20} color="#6b7280" /> : null;
+    return <Icon size={20} color="#6b7280" />;
   };
 
   console.log(expandedIds);

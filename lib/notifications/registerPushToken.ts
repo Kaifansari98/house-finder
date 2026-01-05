@@ -4,10 +4,7 @@ import { Platform } from "react-native";
 import Constants from "expo-constants";
 
 export async function registerForPushNotifications() {
-  if (!Device.isDevice) {
-    console.log("❌ Push notifications need real device");
-    return null;
-  }
+  if (!Device.isDevice) return null;
 
   const { status: existingStatus } = await Notifications.getPermissionsAsync();
 
@@ -18,31 +15,19 @@ export async function registerForPushNotifications() {
     finalStatus = status;
   }
 
-  if (finalStatus !== "granted") {
-    console.log("❌ Notification permission denied");
-    return null;
-  }
+  if (finalStatus !== "granted") return null;
 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+  if (!projectId) return null;
 
-  if (!projectId) {
-    console.log("❌ Expo projectId missing");
-    return null;
-  }
+  const { data: token } = await Notifications.getExpoPushTokenAsync({
+    projectId,
+  });
 
-  const token = (
-    await Notifications.getExpoPushTokenAsync({
-      projectId,
-    })
-  ).data;
-
-  // Android channel (important)
   if (Platform.OS === "android") {
     await Notifications.setNotificationChannelAsync("default", {
       name: "default",
       importance: Notifications.AndroidImportance.MAX,
-      vibrationPattern: [0, 300, 200, 300],
-      lightColor: "#2563eb",
     });
   }
 
